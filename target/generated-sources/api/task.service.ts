@@ -86,7 +86,7 @@ export class TaskService extends BaseService {
             }
         }
 
-        let localVarPath = `/task`;
+        let localVarPath = `/api/task`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<TaskDto>('post', `${basePath}${localVarPath}`,
             {
@@ -141,7 +141,7 @@ export class TaskService extends BaseService {
             }
         }
 
-        let localVarPath = `/task/${this.configuration.encodeParam({name: "taskId", value: taskId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: undefined})}`;
+        let localVarPath = `/api/task/${this.configuration.encodeParam({name: "taskId", value: taskId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: undefined})}`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<any>('delete', `${basePath}${localVarPath}`,
             {
@@ -196,7 +196,7 @@ export class TaskService extends BaseService {
             }
         }
 
-        let localVarPath = `/task/${this.configuration.encodeParam({name: "taskId", value: taskId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: undefined})}`;
+        let localVarPath = `/api/task/${this.configuration.encodeParam({name: "taskId", value: taskId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: undefined})}`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<TaskDto>('get', `${basePath}${localVarPath}`,
             {
@@ -264,7 +264,7 @@ export class TaskService extends BaseService {
             }
         }
 
-        let localVarPath = `/task/${this.configuration.encodeParam({name: "taskId", value: taskId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: undefined})}`;
+        let localVarPath = `/api/task/${this.configuration.encodeParam({name: "taskId", value: taskId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: undefined})}`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<TaskDto>('put', `${basePath}${localVarPath}`,
             {

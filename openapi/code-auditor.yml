@@ -4,8 +4,11 @@ info:
   description: Code Auditor API
   version: 1.0.0
 
+servers:
+  - url: http://localhost:8080/
+
 paths:
-  /adminUsers:
+  /api/adminUsers:
     get:
       tags:
         - User
@@ -21,7 +24,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/AdministratorUser'
-  /user:
+  /api/user:
     post:
       tags:
         - User
@@ -41,7 +44,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GenericUser'
-  /adminUser/{userId}:
+  /api/adminUser/{userId}:
     parameters:
       - $ref: '#/components/parameters/UserId'
     get:
@@ -86,7 +89,7 @@ paths:
         '200':
           description: User deleted
 
-  /studentUsers:
+  /api/studentUsers:
     get:
       tags:
         - User
@@ -102,7 +105,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/StudentUser'
-  /studentUser/{userId}:
+  /api/studentUser/{userId}:
     parameters:
       - $ref: '#/components/parameters/UserId'
     get:
@@ -147,7 +150,7 @@ paths:
         '200':
           description: User deleted
 
-  /professorUsers:
+  /api/professorUsers:
     get:
       tags:
         - User
@@ -163,7 +166,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ProfessorUser'
-  /professorUser/{userId}:
+  /api/professorUser/{userId}:
     parameters:
       - $ref: '#/components/parameters/UserId'
     get:
@@ -208,7 +211,7 @@ paths:
         '200':
           description: User deleted
 
-  /deliverable:
+  /api/deliverable:
     post:
       tags:
         - Deliverable
@@ -229,7 +232,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DeliverableResponse'
-  /deliverable/{deliverableId}:
+  /api/deliverable/{deliverableId}:
     parameters:
       - $ref: '#/components/parameters/DeliverableId'
     get:
@@ -264,7 +267,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DeliverableResponse'
-  /deliverable/{taskId}/report:
+  /api/deliverable/{taskId}/report:
     parameters:
       - $ref: '#/components/parameters/DeliverableId'
     get:
@@ -280,7 +283,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Report'
-  /task:
+  /api/task:
     post:
       tags:
         - Task
@@ -300,7 +303,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Task'
-  /task/{taskId}:
+  /api/task/{taskId}:
     parameters:
       - $ref: '#/components/parameters/TaskId'
     get:
@@ -344,7 +347,7 @@ paths:
       responses:
         '200':
           description: Task deleted
-  /user/{userId}/task/{taskId}:
+  /api/user/{userId}/task/{taskId}:
     parameters:
       - $ref: '#/components/parameters/UserId'
       - $ref: '#/components/parameters/TaskId'

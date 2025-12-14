@@ -92,7 +92,7 @@ export class UserService extends BaseService {
             }
         }
 
-        let localVarPath = `/user`;
+        let localVarPath = `/api/user`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<GenericUserDto>('post', `${basePath}${localVarPath}`,
             {
@@ -147,7 +147,7 @@ export class UserService extends BaseService {
             }
         }
 
-        let localVarPath = `/adminUser/${this.configuration.encodeParam({name: "userId", value: userId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: undefined})}`;
+        let localVarPath = `/api/adminUser/${this.configuration.encodeParam({name: "userId", value: userId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: undefined})}`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<any>('delete', `${basePath}${localVarPath}`,
             {
@@ -201,7 +201,7 @@ export class UserService extends BaseService {
             }
         }
 
-        let localVarPath = `/professorUser/${this.configuration.encodeParam({name: "userId", value: userId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: undefined})}`;
+        let localVarPath = `/api/professorUser/${this.configuration.encodeParam({name: "userId", value: userId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: undefined})}`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<any>('delete', `${basePath}${localVarPath}`,
             {
@@ -255,7 +255,7 @@ export class UserService extends BaseService {
             }
         }
 
-        let localVarPath = `/studentUser/${this.configuration.encodeParam({name: "userId", value: userId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: undefined})}`;
+        let localVarPath = `/api/studentUser/${this.configuration.encodeParam({name: "userId", value: userId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: undefined})}`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<any>('delete', `${basePath}${localVarPath}`,
             {
@@ -310,7 +310,7 @@ export class UserService extends BaseService {
             }
         }
 
-        let localVarPath = `/adminUser/${this.configuration.encodeParam({name: "userId", value: userId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: undefined})}`;
+        let localVarPath = `/api/adminUser/${this.configuration.encodeParam({name: "userId", value: userId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: undefined})}`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<AdministratorUserDto>('get', `${basePath}${localVarPath}`,
             {
@@ -361,7 +361,7 @@ export class UserService extends BaseService {
             }
         }
 
-        let localVarPath = `/adminUsers`;
+        let localVarPath = `/api/adminUsers`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<Array<AdministratorUserDto>>('get', `${basePath}${localVarPath}`,
             {
@@ -416,7 +416,7 @@ export class UserService extends BaseService {
             }
         }
 
-        let localVarPath = `/professorUser/${this.configuration.encodeParam({name: "userId", value: userId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: undefined})}`;
+        let localVarPath = `/api/professorUser/${this.configuration.encodeParam({name: "userId", value: userId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: undefined})}`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<ProfessorUserDto>('get', `${basePath}${localVarPath}`,
             {
@@ -467,7 +467,7 @@ export class UserService extends BaseService {
             }
         }
 
-        let localVarPath = `/professorUsers`;
+        let localVarPath = `/api/professorUsers`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<Array<ProfessorUserDto>>('get', `${basePath}${localVarPath}`,
             {
@@ -522,7 +522,7 @@ export class UserService extends BaseService {
             }
         }
 
-        let localVarPath = `/studentUser/${this.configuration.encodeParam({name: "userId", value: userId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: undefined})}`;
+        let localVarPath = `/api/studentUser/${this.configuration.encodeParam({name: "userId", value: userId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: undefined})}`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<StudentUserDto>('get', `${basePath}${localVarPath}`,
             {
@@ -573,7 +573,7 @@ export class UserService extends BaseService {
             }
         }
 
-        let localVarPath = `/studentUsers`;
+        let localVarPath = `/api/studentUsers`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<Array<StudentUserDto>>('get', `${basePath}${localVarPath}`,
             {
@@ -641,7 +641,7 @@ export class UserService extends BaseService {
             }
         }
 
-        let localVarPath = `/adminUser/${this.configuration.encodeParam({name: "userId", value: userId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: undefined})}`;
+        let localVarPath = `/api/adminUser/${this.configuration.encodeParam({name: "userId", value: userId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: undefined})}`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<AdministratorUserDto>('put', `${basePath}${localVarPath}`,
             {
@@ -710,7 +710,7 @@ export class UserService extends BaseService {
             }
         }
 
-        let localVarPath = `/professorUser/${this.configuration.encodeParam({name: "userId", value: userId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: undefined})}`;
+        let localVarPath = `/api/professorUser/${this.configuration.encodeParam({name: "userId", value: userId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: undefined})}`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<ProfessorUserDto>('put', `${basePath}${localVarPath}`,
             {
@@ -779,7 +779,7 @@ export class UserService extends BaseService {
             }
         }
 
-        let localVarPath = `/studentUser/${this.configuration.encodeParam({name: "userId", value: userId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: undefined})}`;
+        let localVarPath = `/api/studentUser/${this.configuration.encodeParam({name: "userId", value: userId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: undefined})}`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<StudentUserDto>('put', `${basePath}${localVarPath}`,
             {

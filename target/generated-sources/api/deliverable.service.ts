@@ -106,7 +106,7 @@ export class DeliverableService extends BaseService {
             }
         }
 
-        let localVarPath = `/deliverable`;
+        let localVarPath = `/api/deliverable`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<DeliverableResponseDto>('post', `${basePath}${localVarPath}`,
             {
@@ -162,7 +162,7 @@ export class DeliverableService extends BaseService {
             }
         }
 
-        let localVarPath = `/deliverable/${this.configuration.encodeParam({name: "deliverableId", value: deliverableId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: undefined})}`;
+        let localVarPath = `/api/deliverable/${this.configuration.encodeParam({name: "deliverableId", value: deliverableId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: undefined})}`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<DeliverableResponseDto>('get', `${basePath}${localVarPath}`,
             {
@@ -217,7 +217,7 @@ export class DeliverableService extends BaseService {
             }
         }
 
-        let localVarPath = `/deliverable//report`;
+        let localVarPath = `/api/deliverable//report`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<ReportDto>('get', `${basePath}${localVarPath}`,
             {
@@ -305,7 +305,7 @@ export class DeliverableService extends BaseService {
             }
         }
 
-        let localVarPath = `/deliverable/${this.configuration.encodeParam({name: "deliverableId", value: deliverableId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: undefined})}`;
+        let localVarPath = `/api/deliverable/${this.configuration.encodeParam({name: "deliverableId", value: deliverableId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: undefined})}`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<DeliverableResponseDto>('put', `${basePath}${localVarPath}`,
             {

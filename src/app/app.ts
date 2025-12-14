@@ -1,12 +1,12 @@
-import { Component, signal } from '@angular/core';
+import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { ToastModule } from 'primeng/toast';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
-  templateUrl: './app.html',
-  styleUrl: './app.scss'
+  standalone: true,
+  template: ` <router-outlet></router-outlet> `,
+  styleUrl: './app.scss',
+  imports: [RouterOutlet, ToastModule],
 })
-export class App {
-  protected readonly title = signal('code-auditor-client');
-}
+export class App {}
