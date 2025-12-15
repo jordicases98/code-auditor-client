@@ -101,7 +101,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
   providers: [],
 })
 export class LoginComponent {
-  signUpForm = new FormGroup<SignUpForm>({
+  protected signUpForm = new FormGroup<SignUpForm>({
     email: new FormControl('', {
       nonNullable: true,
       validators: [Validators.required, Validators.email],
@@ -116,7 +116,7 @@ export class LoginComponent {
     }),
   });
 
-  loginForm = new FormGroup<LoginForm>({
+  protected loginForm = new FormGroup<LoginForm>({
     token: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
   });
 
@@ -160,7 +160,7 @@ export class LoginComponent {
 
   login() {
     if (this.authService.isLoggedIn()) {
-      this.router.navigate(['']);
+      this.router.navigate(['/task']);
     } else {
       const loginRaw = this.loginForm.getRawValue();
       this.authService.login(loginRaw.token);

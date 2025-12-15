@@ -2,12 +2,16 @@
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.2.
 
+This is the code auditor client that enables the usuers to interact with a UI in order to query the code auditor backend.
+
+Maven build can be found because we are generating the dtos, apis and service with the open api generator with a shared specification between client and backend.
+
 ## Development server
 
 To start a local development server, run:
 
 ```bash
-ng serve
+npm run start
 ```
 
 Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.

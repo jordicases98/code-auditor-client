@@ -303,6 +303,22 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Task'
+  /api/tasks:
+    get:
+      tags:
+        - Task
+      summary: Get tasks
+      description: Get task
+      operationId: getTasks
+      responses:
+        '200':
+          description: Get tasks for a logged user.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
   /api/task/{taskId}:
     parameters:
       - $ref: '#/components/parameters/TaskId'

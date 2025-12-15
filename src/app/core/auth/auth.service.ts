@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { BehaviorSubject, catchError, filter, first, map, Observable, Subject, take } from 'rxjs';
+import { BehaviorSubject, filter, first, map, Observable, take } from 'rxjs';
 import { GenericUserDto, UserTypeDto } from '../../../../target/generated-sources';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Router } from '@angular/router';
@@ -29,7 +29,7 @@ export class AuthService {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
       })
-      .pipe(take(1))
+      .pipe(first())
       .subscribe({
         next: () => {
           this.createUserSubject.next(true);
@@ -49,13 +49,12 @@ export class AuthService {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
       })
-      .pipe(take(1))
+      .pipe(first())
       .subscribe({
-        next: (response: any) => {
-          if (!response?.error) {
-            this.isUserLoggedIn.next(true);
-            this.router.navigate(['']);
-          }
+        next: () => {
+          this.isUserLoggedIn.next(true);
+          this.router.navigate(['/task']);
+          
         },
         error: () => {
           alert('Error Login In');
