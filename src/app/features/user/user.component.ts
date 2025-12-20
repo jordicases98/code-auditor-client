@@ -6,7 +6,7 @@ import { Component } from '@angular/core';
   template: `
     <h1>Users</h1>
   `,
-  styleUrl: './user-component.scss',
+  styleUrl: './user.component.scss',
 })
 export class UserComponent {
 

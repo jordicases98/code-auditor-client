@@ -3,6 +3,7 @@ README.md
 api.base.service.ts
 api.module.ts
 api/api.ts
+api/authentication.service.ts
 api/deliverable.service.ts
 api/task.service.ts
 api/user.service.ts
@@ -23,6 +24,8 @@ model/studentUser.ts
 model/task.ts
 model/taskRequest.ts
 model/testCase.ts
+model/tokenEmailRequest.ts
+model/tokenEmailResponse.ts
 model/user.ts
 model/userRequest.ts
 model/userType.ts

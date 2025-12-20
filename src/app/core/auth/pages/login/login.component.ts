@@ -1,8 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  inject,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import {
   FormControl,
@@ -15,6 +11,7 @@ import { LoginForm, SignUpForm } from './login.form';
 import { Router } from '@angular/router';
 import { AuthService } from '../../auth.service';
 import {
+  UserDto,
   UserRequestDto,
   UserService,
   UserTypeDto,
@@ -33,27 +30,33 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <mat-button-toggle-group name="pageType" aria-label="Font Style" value="SignUp">
-      <mat-button-toggle value="Login" (change)="onToggleChange($event.value)"
-        >Login</mat-button-toggle
-      >
+    <a routerLink="'/login'">
+      <img src="assets/code-review.png" class="code-auditor-logo" />
+    </a>
+    <mat-button-toggle-group name="pageType" value="SignUp">
       <mat-button-toggle value="SignUp" (change)="onToggleChange($event.value)"
         >Sign Up</mat-button-toggle
       >
+      <mat-button-toggle value="Login" (change)="onToggleChange($event.value)"
+        >Login</mat-button-toggle
+      >
+      <mat-button-toggle value="RegenerateToken" (change)="onToggleChange($event.value)"
+        >Regenerate Token</mat-button-toggle
+      >
     </mat-button-toggle-group>
-    <div [hidden]="!showSignUp">
+    <div [hidden]="toggleValue !== 'SignUp'">
       <mat-card>
         <mat-card-title>Sign Up</mat-card-title>
         <mat-card-content>
           <form [formGroup]="signUpForm">
-            <mat-form-field>
+            <mat-form-field appearance="outline">
               <input matInput type="email" placeholder="Email" formControlName="email" />
             </mat-form-field>
-            <mat-form-field>
+            <mat-form-field appearance="outline">
               <input matInput placeholder="Full Name" formControlName="fullName" />
             </mat-form-field>
 
-            <mat-form-field>
+            <mat-form-field appearance="outline">
               <mat-label>User Type</mat-label>
               <mat-select formControlName="userType">
                 <mat-option value="student">Student</mat-option>
@@ -61,19 +64,19 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
                 <mat-option value="adminstrator">Administrator</mat-option>
               </mat-select>
             </mat-form-field>
-            <button matButton="filled" (click)="signUp()" [disabled]="!signUpForm.valid">
+            <button matButton="filled" (click)="signUp(true)" [disabled]="!signUpForm.valid">
               Sign Up
             </button>
           </form>
         </mat-card-content>
       </mat-card>
     </div>
-    <div [hidden]="showSignUp">
+    <div [hidden]="toggleValue !== 'Login'">
       <mat-card>
         <mat-card-title>Login</mat-card-title>
         <mat-card-content>
           <form [formGroup]="loginForm">
-            <mat-form-field>
+            <mat-form-field appearance="outline">
               <input matInput placeholder="Token" formControlName="token" />
             </mat-form-field>
 
@@ -84,9 +87,25 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
         </mat-card-content>
       </mat-card>
     </div>
+    <div [hidden]="toggleValue !== 'RegenerateToken'">
+      <mat-card>
+        <mat-card-title>Regenerate token</mat-card-title>
+        <mat-card-content>
+          <form [formGroup]="regenerateForm">
+            <mat-form-field appearance="outline">
+              <input matInput placeholder="Email" formControlName="email" />
+            </mat-form-field>
+
+            <button matButton="filled" (click)="signUp(false)" [disabled]="!regenerateForm.valid">
+              Regenerate
+            </button>
+          </form>
+        </mat-card-content>
+      </mat-card>
+    </div>
     <p-toast position="center"></p-toast>
   `,
-  styleUrl: './login-component.scss',
+  styleUrl: './login.component.scss',
   imports: [
     MatCardModule,
     FormsModule,
@@ -120,11 +139,18 @@ export class LoginComponent {
     token: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
   });
 
+  protected regenerateForm = new FormGroup<SignUpForm>({
+    email: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.email],
+    }),
+  });
+
   private authService = inject(AuthService);
   private userService = inject(UserService);
   private router = inject(Router);
 
-  showSignUp = true;
+  toggleValue = 'SignUp';
 
   constructor(private messageService: MessageService) {}
 
@@ -153,29 +179,28 @@ export class LoginComponent {
     });
   }
 
-  signUp() {
+  signUp(createuser: boolean) {
     const signUpRaw = this.signUpForm.getRawValue();
-    this.authService.generateEmailUrl(signUpRaw.email);
+    this.authService.generateEmailUrl(signUpRaw.email, createuser);
   }
 
   login() {
+    const loginRaw = this.loginForm.getRawValue();
     if (this.authService.isLoggedIn()) {
       this.router.navigate(['/task']);
     } else {
-      const loginRaw = this.loginForm.getRawValue();
       this.authService.login(loginRaw.token);
     }
   }
 
   onToggleChange(value: string) {
-    this.showSignUp = value === 'SignUp';
+    this.toggleValue = value;
   }
 
   showToastSuccessUserCreation() {
     this.messageService.add({
       severity: 'success',
       summary: 'User created and email sent successfully',
-      sticky: true,
     });
   }
 }

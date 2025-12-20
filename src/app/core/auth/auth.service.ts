@@ -1,6 +1,25 @@
 import { inject, Injectable } from '@angular/core';
-import { BehaviorSubject, filter, first, map, Observable, take } from 'rxjs';
-import { GenericUserDto, UserTypeDto } from '../../../../target/generated-sources';
+import {
+  BehaviorSubject,
+  concatMap,
+  EMPTY,
+  filter,
+  first,
+  map,
+  Observable,
+  switchMap,
+  take,
+  tap,
+} from 'rxjs';
+import {
+  AuthenticationService,
+  GenericUserDto,
+  TokenEmailRequestDto,
+  TokenEmailResponseDto,
+  UserDto,
+  UserService,
+  UserTypeDto,
+} from '../../../../target/generated-sources';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Router } from '@angular/router';
 
@@ -10,6 +29,8 @@ import { Router } from '@angular/router';
 export class AuthService {
   private httpClient = inject(HttpClient);
   private router = inject(Router);
+  private userService = inject(UserService);
+  private authenticationService = inject(AuthenticationService);
 
   private userInformationSubject = new BehaviorSubject<GenericUserDto | null>(null);
 
@@ -21,7 +42,7 @@ export class AuthService {
 
   userInfo$: Observable<GenericUserDto | null> = this.userInformationSubject.asObservable();
 
-  generateEmailUrl(email: string) {
+  generateEmailUrl(email: string, createUser: boolean) {
     const body = new HttpParams().set('username', email);
     this.httpClient
       .post('/auth/ott/generate', body, {
@@ -29,10 +50,12 @@ export class AuthService {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
       })
-      .pipe(first())
+      .pipe(take(1))
       .subscribe({
         next: () => {
-          this.createUserSubject.next(true);
+          if (createUser) {
+            this.createUserSubject.next(true);
+          }
         },
         error: () => {
           this.createUserSubject.next(false);
@@ -49,12 +72,22 @@ export class AuthService {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
       })
-      .pipe(first())
+      .pipe(
+        switchMap(() => {
+          const request: TokenEmailRequestDto = {
+            token: token,
+          };
+          return this.authenticationService.getEmailFromToken(request);
+        }),
+        switchMap((tokenEmailResponse: TokenEmailResponseDto) =>
+          this.userService.getGenericUser(tokenEmailResponse.email ?? '')
+        )
+      )
       .subscribe({
-        next: () => {
+        next: (user: UserDto) => {
           this.isUserLoggedIn.next(true);
+          this.setUserInformationSubject(user);
           this.router.navigate(['/task']);
-          
         },
         error: () => {
           alert('Error Login In');
@@ -68,14 +101,24 @@ export class AuthService {
   }
 
   logout() {
-    this.isUserLoggedIn.next(false);
-    this.userInformationSubject.next(null);
-    sessionStorage.removeItem('user');
-    this.httpClient.post('/api/logout', {}, { withCredentials: true });
+    this.httpClient
+      .post('/auth/logout', {}, { withCredentials: true })
+      .pipe(first())
+      .subscribe({
+        next: () => {
+          this.isUserLoggedIn.next(false);
+          this.userInformationSubject.next(null);
+          sessionStorage.removeItem('user');
+          this.router.navigate(['/login']);
+        },
+        error: () => {
+          alert('Error Login Out');
+        },
+      });
   }
 
   isLoggedIn() {
-    return !!this.isUserLoggedIn.getValue();
+    return !!this.isUserLoggedIn.getValue() && !!this.userInformationSubject.getValue();
   }
 
   hasAnyRole(role: UserTypeDto[]): Observable<boolean> {

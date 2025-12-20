@@ -9,6 +9,8 @@ export * from './studentUser';
 export * from './task';
 export * from './taskRequest';
 export * from './testCase';
+export * from './tokenEmailRequest';
+export * from './tokenEmailResponse';
 export * from './user';
 export * from './userRequest';
 export * from './userType';

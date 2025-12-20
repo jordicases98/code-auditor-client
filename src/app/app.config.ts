@@ -1,5 +1,6 @@
 import {
   ApplicationConfig,
+  LOCALE_ID,
   provideBrowserGlobalErrorListeners,
   provideZonelessChangeDetection,
 } from '@angular/core';
@@ -12,6 +13,9 @@ import { provideAnimations } from '@angular/platform-browser/animations';
 import { MessageService } from 'primeng/api';
 import { providePrimeNG } from 'primeng/config';
 import { credentialsInterceptor } from './core/auth/interceptors/credentials.interceptor';
+import { provideNativeDateAdapter } from '@angular/material/core';
+
+
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
@@ -21,9 +25,11 @@ export const appConfig: ApplicationConfig = {
     provideAnimations(),
     MessageService,
     providePrimeNG({
-            theme: {
-                preset: Aura
-            }
-        })
+      theme: {
+        preset: Aura,
+      },
+    }),
+    {provide: LOCALE_ID, useValue: 'es-ES' },
+    provideNativeDateAdapter()
   ],
 };

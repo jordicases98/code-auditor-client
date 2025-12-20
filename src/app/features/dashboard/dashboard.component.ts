@@ -13,7 +13,7 @@ import { MatGridListModule } from '@angular/material/grid-list';
       <mat-grid-tile>4</mat-grid-tile>
     </mat-grid-list>
   `,
-  styleUrl: './dashboard-component.scss',
+  styleUrl: './dashboard.component.scss',
   imports: [MatGridListModule],
 })
 export class DashboardComponent {}

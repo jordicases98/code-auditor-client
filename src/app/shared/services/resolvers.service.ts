@@ -15,7 +15,7 @@ import {
 } from '../../../../target/generated-sources';
 import { AuthService } from '../../core/auth/auth.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { EMPTY, switchMap } from 'rxjs';
+import { EMPTY, switchMap, take } from 'rxjs';
 
 export const userResolver: ResolveFn<
   StudentUserDto | AdministratorUserDto | ProfessorUserDto | null
@@ -44,7 +44,9 @@ export const tasksResolver: ResolveFn<TaskDto[]> = (
   state: RouterStateSnapshot
 ) => {
   const taskService = inject(TaskService);
-  return taskService.getTasks();
+  return taskService.getTasks().pipe(
+    take(1)
+  );
 }
 
 export const taskResolver: ResolveFn<TaskDto> = (
@@ -53,7 +55,9 @@ export const taskResolver: ResolveFn<TaskDto> = (
 ) => {
   const taskService = inject(TaskService);
   const taskId = +route.paramMap.get('id')!;
-  return taskService.getTask(taskId);
+  return taskService.getTask(taskId).pipe(
+    take(1)
+  );
 };
 
 export const deliverableResolver: ResolveFn<DeliverableResponseDto> = (
@@ -62,7 +66,9 @@ export const deliverableResolver: ResolveFn<DeliverableResponseDto> = (
 ) => {
   const deliverableService = inject(DeliverableService);
   const deliverableId = +route.paramMap.get('id')!;
-  return deliverableService.getDeliverable(deliverableId);
+  return deliverableService.getDeliverable(deliverableId).pipe(
+    take(1)
+  );
 };
 
 export const reportResolver: ResolveFn<ReportDto> = (
@@ -71,5 +77,7 @@ export const reportResolver: ResolveFn<ReportDto> = (
 ) => {
   const deliverableService = inject(DeliverableService);
   const deliverableId = +route.paramMap.get('id')!;
-  return deliverableService.getDeliverableReport(deliverableId);
+  return deliverableService.getDeliverableReport(deliverableId).pipe(
+    take(1)
+  );
 };

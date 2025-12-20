@@ -6,7 +6,7 @@ import { Component } from '@angular/core';
   template: `
     <h1>Report</h1>
   `,
-  styleUrl: './report-component.scss',
+  styleUrl: './report.component.scss',
 })
 export class ReportComponent {
 

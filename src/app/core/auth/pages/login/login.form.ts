@@ -7,6 +7,6 @@ export interface LoginForm {
 
 export interface SignUpForm {
   email: FormControl<string>;
-  fullName: FormControl<string>;
-  userType: FormControl<UserTypeDto>;
+  fullName?: FormControl<string>;
+  userType?: FormControl<UserTypeDto>;
 }

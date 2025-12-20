@@ -6,7 +6,7 @@ import { Component } from '@angular/core';
   template: `
     <h1>Dashboard</h1>
   `,
-  styleUrl: './deliverable-component.scss',
+  styleUrl: './deliverable.component.scss',
 })
 export class DeliverableComponent {
 

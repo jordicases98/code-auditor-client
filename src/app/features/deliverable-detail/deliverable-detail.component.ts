@@ -66,6 +66,6 @@ export class DeliverableDetail {
   }
 
   ngOnInit() {
-    const deliverable: DeliverableDto = this.route.snapshot.data[0]?.deliverable;
+    const deliverable: DeliverableDto = this.route.snapshot.data['deliverable'];
   }
 }
