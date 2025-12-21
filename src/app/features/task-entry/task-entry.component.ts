@@ -1,7 +1,8 @@
 import { Component, inject } from '@angular/core';
-import { MatCardModule } from '@angular/material/card';
+import { MatCardActions, MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import {
+  StudentUserDto,
   TaskDto,
   TaskRequestDto,
   TaskService,
@@ -21,8 +22,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { AuthService } from '../../core/auth/auth.service';
 import { MatOption, MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
-import { CommonModule } from '@angular/common';
-import { MatIcon } from '@angular/material/icon';
+import { csvStringValidator } from '../../core/csv-string.validator';
 
 @Component({
   selector: 'app-task-entry-component',
@@ -37,6 +37,7 @@ import { MatIcon } from '@angular/material/icon';
     RouterLink,
     MatSelectModule,
     MatButtonModule,
+    MatCardActions
   ],
   template: ` <mat-card>
       <mat-card-title>Task Entry</mat-card-title>
@@ -60,7 +61,7 @@ import { MatIcon } from '@angular/material/icon';
           </mat-form-field>
           <mat-form-field appearance="outline">
             <mat-label>Student Assigned</mat-label>
-            <mat-select formControlName="studentIds" required multiple>
+            <mat-select formControlName="studentUserIds" required multiple>
               @for (student of students; track student) {
               <mat-option [value]="student.id">{{ student.fullName }}</mat-option>
               }
@@ -73,15 +74,19 @@ import { MatIcon } from '@angular/material/icon';
               placeholder="Solution Test Cases"
               formControlName="solutionTestCases"
             ></textarea>
+            @if(taskForm.controls.solutionTestCases.hasError('csvEmptyValue') ||
+            taskForm.controls.solutionTestCases.hasError('csvMalformatted') ) {
+            <mat-error> CSV is malformatted. Must follow csv input output pairs </mat-error>
+            }
           </mat-form-field>
         </form>
-        <mat-card-actions align="end">
-          <button matButton="filled" [routerLink]="['/task']">Go back</button>
-          <div fxFlex></div>
-          <button matButton="filled" (click)="submitTaskForm()" [disabled]="!taskForm.valid">
+        <mat-card-actions class="actions-buttons">
+          <button mat-raised-button color="primary" [routerLink]="['/task']">Go back</button>
+           <span class="spacer"></span>
+          <button mat-raised-button color="primary" (click)="submitTaskForm()" [disabled]="!taskForm.valid">
             Submit
-          </button></mat-card-actions
-        >
+          </button>
+        </mat-card-actions>
       </mat-card-content>
     </mat-card>
     <p-toast position="center"></p-toast>`,
@@ -99,13 +104,13 @@ export class TaskEntry {
     title: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     description: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     dueDate: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    studentIds: new FormControl<number[]>([], {
+    studentUserIds: new FormControl<number[]>([], {
       nonNullable: true,
       validators: [Validators.required],
     }),
     solutionTestCases: new FormControl('', {
       nonNullable: true,
-      validators: [Validators.required],
+      validators: [Validators.required, csvStringValidator],
     }),
   });
   minDate = new Date();
@@ -115,22 +120,15 @@ export class TaskEntry {
   isProfessor$ = this.authService.hasAnyRole([UserTypeDto.Professor]);
 
   constructor(private messageService: MessageService, private route: ActivatedRoute) {
-    this.userService
-      .getStudentUsers()
-      .pipe(
-        take(1),
-        tap((studentUsers) => (this.students = studentUsers))
-      )
-      .subscribe();
+    this.students = this.route.snapshot.data['studentUsers'] as StudentUserDto[];
 
     const task: TaskDto = this.route.snapshot.data['task'];
     const lastPartUrl = this.router.url.split('?')[0].split('/').pop() ?? '0';
-    console.log(lastPartUrl)
     if (task && +lastPartUrl === task.id) {
       let csvString = this.csvToStringTestCases(task);
       this.taskForm.setValue({
         taskId: task.id ?? 0,
-        studentIds: (task.studentUsers?.map((students) => students.id) as number[]) ?? [],
+        studentUserIds: (task.studentUsers?.flatMap((students) => students.id) as number[]) ?? [],
         title: task.title ?? '',
         description: task.description ?? '',
         dueDate: task.dueDate ?? '',
@@ -147,8 +145,8 @@ export class TaskEntry {
     const taskDto = {
       title: taskFormRaw.title,
       description: taskFormRaw.description,
-      dueDate: taskFormRaw.dueDate,
-      studentUsers: taskFormRaw.studentIds,
+      dueDate: new Date(taskFormRaw.dueDate).toLocaleDateString('en-CA'),
+      studentUserIds: taskFormRaw.studentUserIds,
       solutionTestCases: formattedTestCases,
     } as TaskRequestDto;
     if (!taskFormRaw.taskId) {
@@ -182,7 +180,10 @@ export class TaskEntry {
   private csvToStringTestCases(task: TaskDto) {
     let csvString = '';
     task.solutionTestCases?.forEach((element) => {
-      csvString.concat(element.testCaseInput + ',' + element.testCaseOutput);
+      if (csvString?.length !== 0) {
+        csvString = csvString + ',';
+      }
+      csvString = csvString.concat(element.testCaseInput + ',' + element.testCaseOutput);
     });
     return csvString;
   }

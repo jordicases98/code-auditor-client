@@ -13,7 +13,7 @@ import { provideAnimations } from '@angular/platform-browser/animations';
 import { MessageService } from 'primeng/api';
 import { providePrimeNG } from 'primeng/config';
 import { credentialsInterceptor } from './core/auth/interceptors/credentials.interceptor';
-import { provideNativeDateAdapter } from '@angular/material/core';
+import { MAT_DATE_LOCALE, provideNativeDateAdapter } from '@angular/material/core';
 
 
 export const appConfig: ApplicationConfig = {
@@ -30,6 +30,7 @@ export const appConfig: ApplicationConfig = {
       },
     }),
     {provide: LOCALE_ID, useValue: 'es-ES' },
+    {provide: MAT_DATE_LOCALE, useValue: 'es-ES' },
     provideNativeDateAdapter()
   ],
 };

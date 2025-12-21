@@ -10,6 +10,7 @@ import { Toast } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { DatePipe } from '@angular/common';
 import { TruncatePipe } from '../../core/pipe/truncate.pipe';
+import { take } from 'rxjs';
 const datePipe = new DatePipe('es-ES');
 
 interface TaskView {
@@ -18,6 +19,7 @@ interface TaskView {
   description?: string;
   dueDate?: string;
   professor?: string;
+  hasDeliverable?: boolean
 }
 
 @Component({
@@ -64,6 +66,11 @@ interface TaskView {
             <mat-icon>delete</mat-icon>
           </button>
           }
+          @if((isStudent$ | async) && element.hasDeliverable) {
+          <button mat-icon-button (click)="viewReport(element.id)">
+            <mat-icon>check_circle</mat-icon>
+          </button>
+          }
         </td>
       </ng-container>
 
@@ -86,24 +93,10 @@ export class TaskComponent {
   private taskService = inject(TaskService);
 
   protected isProfessor$ = this.authService.hasAnyRole([UserTypeDto.Professor]);
+  protected isStudent$ = this.authService.hasAnyRole([UserTypeDto.Student]);
 
   displayedColumns: string[] = ['title', 'description', 'date', 'professor', 'actions'];
-  dataSource: TaskView[] = [
-    {
-      id: 1,
-      title: 'Factorial',
-      description: 'Perform the factorial',
-      dueDate: '10-10-2025',
-      professor: 'John',
-    },
-    {
-      id: 2,
-      title: 'Dijkastra',
-      description: 'Dijkastra shortest path',
-      dueDate: '12-12-2025',
-      professor: 'Peter',
-    },
-  ];
+  dataSource: TaskView[] = [];
 
   constructor(private route: ActivatedRoute, private messageService: MessageService) {
     const taskData = this.route.snapshot.data['tasks'] as TaskDto[];
@@ -113,6 +106,7 @@ export class TaskComponent {
       description: task.description,
       dueDate: datePipe.transform(task.dueDate, 'dd-MM-yyyy'),
       professor: task.professorUser?.fullName,
+      hasDeliverable: task.deliverables!.length > 0
     })) as TaskView[];
     this.dataSource = taskMapped;
   }
@@ -127,13 +121,17 @@ export class TaskComponent {
     this.router.navigate([`/task/view/${taskId}`]);
   }
 
+  viewReport(taskId: number) {
+    this.router.navigate([`/task/view/${taskId}`]);
+  }
+
   deleteTask(taskId: number) {
     this.taskService
       .deleteTask(taskId)
-      .pipe(takeUntilDestroyed())
+      .pipe(take(1))
       .subscribe({
         next: () => {
-          this.showToastSuccessUserDeletion();
+          this.showToastSuccessTaskDeletion();
         },
         error: () => {
           alert('Error Deleting User');
@@ -145,10 +143,10 @@ export class TaskComponent {
     this.router.navigate([`/task/${taskId}`]);
   }
 
-  showToastSuccessUserDeletion() {
+  showToastSuccessTaskDeletion() {
     this.messageService.add({
       severity: 'success',
-      summary: 'User deleted successfully',
+      summary: 'Task deleted successfully',
     });
   }
 }

@@ -23,7 +23,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MessageService } from 'primeng/api';
 import { Toast } from 'primeng/toast';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { take } from 'rxjs';
 
 @Component({
   selector: 'app-login-component',
@@ -64,7 +64,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
                 <mat-option value="adminstrator">Administrator</mat-option>
               </mat-select>
             </mat-form-field>
-            <button matButton="filled" (click)="signUp(true)" [disabled]="!signUpForm.valid">
+            <button mat-raised-button color="primary" (click)="signUp(true)" [disabled]="!signUpForm.valid">
               Sign Up
             </button>
           </form>
@@ -80,7 +80,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
               <input matInput placeholder="Token" formControlName="token" />
             </mat-form-field>
 
-            <button matButton="filled" (click)="login()" [disabled]="!loginForm.valid">
+            <button mat-raised-button color="primary" (click)="login()" [disabled]="!loginForm.valid">
               Login
             </button>
           </form>
@@ -96,7 +96,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
               <input matInput placeholder="Email" formControlName="email" />
             </mat-form-field>
 
-            <button matButton="filled" (click)="signUp(false)" [disabled]="!regenerateForm.valid">
+            <button mat-raised-button color="primary" (click)="signUp(false)" [disabled]="!regenerateForm.valid">
               Regenerate
             </button>
           </form>
@@ -165,7 +165,7 @@ export class LoginComponent {
         } as UserRequestDto;
         this.userService
           .createUser(userRequest)
-          .pipe(takeUntilDestroyed())
+          .pipe()
           .subscribe({
             next: (user) => {
               this.authService.setUserInformationSubject(user ?? null);
@@ -181,7 +181,7 @@ export class LoginComponent {
 
   signUp(createuser: boolean) {
     const signUpRaw = this.signUpForm.getRawValue();
-    this.authService.generateEmailUrl(signUpRaw.email, createuser);
+    this.authService.generateEmailUrl(createuser ? signUpRaw.email : this.regenerateForm.controls.email!.value, createuser);
   }
 
   login() {

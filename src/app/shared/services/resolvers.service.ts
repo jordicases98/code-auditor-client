@@ -10,6 +10,7 @@ import {
   StudentUserDto,
   TaskDto,
   TaskService,
+  UserDto,
   UserService,
   UserTypeDto,
 } from '../../../../target/generated-sources';
@@ -60,6 +61,16 @@ export const taskResolver: ResolveFn<TaskDto> = (
   );
 };
 
+export const usersResolver: ResolveFn<StudentUserDto[]> = (
+  route: ActivatedRouteSnapshot,
+  state: RouterStateSnapshot
+) => {
+  const userService = inject(UserService);
+  return userService.getStudentUsers().pipe(
+    take(1)
+  );
+};
+
 export const deliverableResolver: ResolveFn<DeliverableResponseDto> = (
   route: ActivatedRouteSnapshot,
   state: RouterStateSnapshot
@@ -76,8 +87,8 @@ export const reportResolver: ResolveFn<ReportDto> = (
   state: RouterStateSnapshot
 ) => {
   const deliverableService = inject(DeliverableService);
-  const deliverableId = +route.paramMap.get('id')!;
-  return deliverableService.getDeliverableReport(deliverableId).pipe(
+  const taskId = +route.paramMap.get('id')!;
+  return deliverableService.getDeliverableReport(taskId).pipe(
     take(1)
   );
 };

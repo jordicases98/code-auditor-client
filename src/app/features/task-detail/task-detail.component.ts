@@ -1,16 +1,17 @@
 import { Component, inject } from '@angular/core';
 import { MatCardActions, MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatError, MatFormFieldModule } from '@angular/material/form-field';
 import {
-  DeliverableDto,
   DeliverableResponseDto,
   DeliverableService,
+  ReportDto,
+  StudentUserDto,
   TaskDto,
-  TaskService,
+  UserDto,
   UserTypeDto,
 } from '../../../../target/generated-sources';
-import { take } from 'rxjs';
-import { DeliverableForm, TaskDetailForm } from './task.form';
+import { BehaviorSubject, debounceTime, finalize, map, take, throttleTime } from 'rxjs';
+import { DeliverableForm, DeliverableResponseForm } from './task.form';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MessageService } from 'primeng/api';
 import { Toast } from 'primeng/toast';
@@ -21,6 +22,10 @@ import { AuthService } from '../../core/auth/auth.service';
 import { AsyncPipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatOption, MatSelectModule } from '@angular/material/select';
+import { TaskEntryForm } from '../task-entry/task-entry.form';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-task-detail-component',
@@ -36,6 +41,10 @@ import { MatIcon } from '@angular/material/icon';
     RouterLink,
     MatCardActions,
     MatIcon,
+    MatError,
+    MatProgressSpinnerModule,
+    MatOption,
+    MatSelectModule,
   ],
   template: ` <mat-card>
       <mat-card-title>Task Details</mat-card-title>
@@ -48,37 +57,95 @@ import { MatIcon } from '@angular/material/icon';
             <textarea matInput placeholder="Description" formControlName="description"></textarea>
           </mat-form-field>
           <mat-form-field appearance="outline">
+            <mat-hint>TestInput1,TestOutput1,TestInput2,TestOutput2</mat-hint>
+            <textarea
+              matInput
+              placeholder="Solution Test Cases"
+              formControlName="solutionTestCases"
+            ></textarea>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
             <input matInput [matDatepicker]="picker" formControlName="dueDate" />
             <mat-hint>MM/DD/YYYY</mat-hint>
             <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
             <mat-datepicker #picker></mat-datepicker>
           </mat-form-field>
+          @if(!(isStudent$ | async)) {
+          <mat-form-field appearance="outline">
+            <mat-label>Student Assigned</mat-label>
+            <mat-select formControlName="studentUserIds" required>
+              @for (student of students; track student) {
+              <mat-option [value]="student.id">{{ student.fullName }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          }
         </form>
         @if(isStudent$ | async) {
         <form [formGroup]="deliverableForm">
           <mat-form-field appearance="outline" class="file-field" appearance="outline">
             <mat-label>Upload deliverable</mat-label>
-            <input matInput [value]="fileName" placeholder="Choose a file" readonly />
+            <mat-hint
+              >Allowed Extensions: C#, GO, JAVA, JS, PHP, PY, RB, RS, TS, plain text</mat-hint
+            >
+            <input
+              matInput
+              formControlName="fileContentSolution"
+              [value]="fileName"
+              placeholder="Choose a file"
+              readonly
+            />
             <button mat-icon-button matSuffix type="button" (click)="fileInput.click()">
               <mat-icon>attach_file</mat-icon>
             </button>
-            <input #fileInput type="file" hidden (change)="onFileSelected($event)" />
+            <input
+              #fileInput
+              type="file"
+              hidden
+              (change)="onFileSelected($event)"
+              [accept]="acceptedFormats"
+            />
+            @if(deliverableForm.controls.fileContentSolution.hasError('backendError')) {
+            <mat-error class="error-message">
+              {{ deliverableForm.controls.fileContentSolution.getError('backendError') }}
+            </mat-error>
+            }
           </mat-form-field>
         </form>
-        <mat-card-actions align="end">
-          <button matButton="filled" [routerLink]="['/task']">Go back</button>
-          <div fxFlex></div>
+        <mat-card-actions class="actions-buttons">
+          <button mat-raised-button color="primary" [routerLink]="['/task']">Go back</button>
+          <span class="spacer"></span>
           <button
-            matButton="filled"
+            mat-raised-button
+            color="primary"
             (click)="submitDeliverableForm()"
             [disabled]="!deliverableForm.valid"
           >
             Submit
           </button>
         </mat-card-actions>
+        }@if(showLoadingSpinner === true) {
+        <mat-spinner class="spinner-loading"></mat-spinner>
         }
       </mat-card-content>
     </mat-card>
+    @if(showDeliverable$ | async) {
+    <button mat-raised-button color="primary" (click)="toggleReport()" class="toggle-report">Toggle Report</button>
+    @if(openReportCard) {
+    <mat-card>
+      <mat-card-content>
+        <form [formGroup]="deliverableResponseForm">
+          <mat-form-field appearance="outline">
+            <input matInput placeholder="Status" formControlName="status" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <input matInput placeholder="Sonar Url" formControlName="sonarProjectUrl" />
+            <a [href]="externalUrl" target="_blank"> Sonar Project URL </a>
+          </mat-form-field>
+        </form>
+      </mat-card-content>
+    </mat-card>
+    } }
     <p-toast position="center"></p-toast>`,
   styleUrl: './task-detail.component.scss',
   standalone: true,
@@ -87,10 +154,18 @@ export class TaskDetail {
   private deliverableService = inject(DeliverableService);
   private authService = inject(AuthService);
 
-  protected taskForm = new FormGroup<TaskDetailForm>({
+  protected taskForm = new FormGroup<TaskEntryForm>({
     title: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     description: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     dueDate: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    studentUserIds: new FormControl<number[]>([], {
+      nonNullable: true,
+      validators: [],
+    }),
+    solutionTestCases: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required],
+    }),
   });
 
   protected deliverableForm = new FormGroup<DeliverableForm>({
@@ -100,63 +175,101 @@ export class TaskDetail {
     }),
   });
 
+  protected deliverableResponseForm = new FormGroup<DeliverableResponseForm>({
+    status: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    sonarProjectUrl: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+  });
+
   isStudent$ = this.authService.hasAnyRole([UserTypeDto.Student]);
+  showDeliverableSubject = new BehaviorSubject(false);
+  showDeliverable$ = this.showDeliverableSubject.asObservable();
 
   taskData!: TaskDto;
 
-  deliverableId = 0;
+  students!: UserDto[];
+
+  acceptedFormats = '.cs,.go,.java,.js,.php,.py,.rb,.rs,.ts';
 
   fileName = '';
 
+  showLoadingSpinner = false;
+
+  openReportCard = false;
+
+  externalUrl = '';
+
+  userId$ = this.authService.userInfo$.pipe(
+    map((u) => u?.id),
+    take(1)
+  );
+  userId: number | undefined;
   constructor(private messageService: MessageService, private route: ActivatedRoute) {
     this.taskData = this.route.snapshot.data['task'] as TaskDto;
+    this.students = this.route.snapshot.data['studentUsers'] as StudentUserDto[];
+    this.userId$.subscribe((id) => (this.userId = id));
+  }
+
+  ngOnInit() {
     this.taskForm.setValue({
       title: this.taskData.title ?? '',
       description: this.taskData.description ?? '',
       dueDate: this.taskData.dueDate ?? '',
+      solutionTestCases:
+        this.taskData.solutionTestCases
+          ?.map((tc) => [tc.testCaseInput, tc.testCaseOutput])
+          .join(',') ?? '',
+      studentUserIds: this.taskData.studentUsers!.flatMap((u) => (u.id ? [u.id] : [])),
     });
     this.taskForm.disable();
-    this.deliverableId = this.route.snapshot.data['deliverable'];
+    if (this.userId && +this.userId === this.taskData.professorUser?.id) {
+      this.taskForm.controls.studentUserIds.enable();
+    } else if (this.taskData.id && this.userId) {
+      this.getDeliverableByTaskAndUserCall(+this.taskData.id, +this.userId);
+    }
+    this.taskForm.controls.studentUserIds.valueChanges
+      .pipe(throttleTime(300))
+      .subscribe((studentId: any) => {
+        if (studentId && this.taskData.id) {
+          this.getDeliverableByTaskAndUserCall(+this.taskData.id, studentId);
+        }
+      });
   }
 
-  ngOnInit() {
+  private getDeliverableByTaskAndUserCall(taskId: number, userId: number) {
+    this.deliverableService
+      .getDeliverableByTaskAndUser(taskId, userId)
+      .pipe(take(1))
+      .subscribe({
+        next: (report: DeliverableResponseDto) => {
+          this.displayDeliverableResults(report);
+        },
+        error: () => {
+          alert('Could not get report');
+        },
+      });
   }
 
   submitDeliverableForm() {
     const deliverableFormRaw = this.deliverableForm.getRawValue();
-    if (this.taskData.id) {
-      // const formData = new FormData();
-      // formData.append('fileContentSolution', deliverableFormRaw.fileContentSolution ?? null);
-      // formData.append('taskId', this.taskData.id);
-      if (!this.deliverableId) {
-        this.deliverableService
-          .commitDeliverable(deliverableFormRaw.fileContentSolution as Blob, this.taskData.id ?? 0)
-          .pipe(take(1))
-          .subscribe({
-            next: (response) => {
-              this.displayDeliverableResults(response);
-            },
-            error: () => {
-              alert('Could not process deliverable');
-            },
-          });
-      } else {
-        this.deliverableService
-          .updateDeliverable(
-            this.deliverableId,
-            deliverableFormRaw.fileContentSolution as Blob,
-            this.taskData.id
-          )
-          .pipe(take(1))
-          .subscribe({
-            next: (response) => {
-              this.displayDeliverableResults(response);
-            },
-            error: () => {
-              alert('Could not process deliverable');
-            },
-          });
-      }
+    if (this.taskData.id && !this.showLoadingSpinner) {
+      this.showLoadingSpinner = true;
+      this.deliverableService
+        .commitDeliverable(deliverableFormRaw.fileContentSolution as Blob, this.taskData.id ?? 0)
+        .pipe(
+          take(1),
+          finalize(() => (this.showLoadingSpinner = false))
+        )
+        .subscribe({
+          next: (response) => {
+            this.displayDeliverableResults(response);
+          },
+          error: (errorResponse) => {
+            this.deliverableForm.controls.fileContentSolution.setErrors({
+              backendError: errorResponse?.error?.detail,
+            });
+            alert('Could not process deliverable');
+          },
+        });
     }
   }
 
@@ -174,10 +287,35 @@ export class TaskDetail {
       return;
     }
     const file = inputEvent.files[0];
+
+    const allowedExtensions = ['cs', 'go', 'java', 'js', 'php', 'py', 'rb', 'rs', 'ts'];
+    const fileName = file.name.toLowerCase();
+    const extension = fileName.split('.').pop();
+    if (!allowedExtensions.includes(extension)) {
+      alert('Invalid file type');
+      inputEvent.value = '';
+      return;
+    }
     this.fileName = file.name;
     this.deliverableForm.patchValue({ fileContentSolution: file });
     this.deliverableForm.updateValueAndValidity();
   }
 
-  displayDeliverableResults(deliverableResults: DeliverableResponseDto) {}
+  private fillReportFrom(status: string, sonarProjectUrl: string) {
+    this.deliverableResponseForm.setValue({
+      status: status,
+      sonarProjectUrl: sonarProjectUrl,
+    });
+    this.externalUrl = sonarProjectUrl;
+    this.deliverableResponseForm.disable();
+  }
+
+  displayDeliverableResults(deliverableResults: DeliverableResponseDto) {
+    this.fillReportFrom(deliverableResults.status ?? '', deliverableResults.sonarProjectUrl ?? '');
+    this.showDeliverableSubject.next(true);
+  }
+
+  toggleReport() {
+    this.openReportCard = !this.openReportCard;
+  }
 }

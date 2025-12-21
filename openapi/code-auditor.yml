@@ -288,32 +288,30 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DeliverableResponse'
-    put:
+  /api/deliverable/{taskId}/{userId}:
+    parameters:
+      - $ref: '#/components/parameters/TaskId'
+      - $ref: '#/components/parameters/UserId'
+    get:
       tags:
         - Deliverable
-      summary: Update deliverable
-      description: Update deliverable to be analysed.
-      operationId: updateDeliverable
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/DeliverableRequest'
+      summary: Get deliverable from task id and user id
+      description: Get deliverable to be analysed.
+      operationId: getDeliverableByTaskAndUser
       responses:
         '200':
-          description: Updated deliverable information.
+          description: Deliverable information.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/DeliverableResponse'
-  /api/deliverable/{taskId}/report:
+  /api/deliverable/{deliverableId}/report:
     parameters:
       - $ref: '#/components/parameters/DeliverableId'
     get:
       tags:
         - Deliverable
-      summary: Get deliverable report
+      summary: Get deliverable report by task id (student) or deliverable id
       description: Get deliverable report.
       operationId: getDeliverableReport
       responses:
@@ -505,7 +503,7 @@ components:
           type: string
         dueDate:
           type: string
-          format: date-time
+          format: date
         deliverables:
           type: array
           items:
@@ -529,7 +527,7 @@ components:
           type: string
         dueDate:
           type: string
-          format: date-time
+          format: date
         studentUserIds:
           type: array
           items:
