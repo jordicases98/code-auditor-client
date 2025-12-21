@@ -5,6 +5,7 @@ import {
   DeliverableDto,
   DeliverableResponseDto,
   DeliverableService,
+  GenericUserDto,
   ProfessorUserDto,
   ReportDto,
   StudentUserDto,
@@ -16,23 +17,20 @@ import {
 } from '../../../../target/generated-sources';
 import { AuthService } from '../../core/auth/auth.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { EMPTY, iif, of, switchMap, take } from 'rxjs';
+import { EMPTY, forkJoin, iif, map, of, switchMap, take } from 'rxjs';
 
-export const userResolver: ResolveFn<
-  StudentUserDto | AdministratorUserDto | ProfessorUserDto | null
-> = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
+export const userResolver: ResolveFn<GenericUserDto> = (
+  route: ActivatedRouteSnapshot,
+  state: RouterStateSnapshot
+) => {
   const userService = inject(UserService);
   const authService = inject(AuthService);
   return authService.userInfo$.pipe(
-    takeUntilDestroyed(),
+    take(1),
     switchMap((userInfo) => {
-      const userId = +route.paramMap.get('id')!;
-      if (userInfo?.userType === UserTypeDto.Administrator) {
-        return userService.getAdminUser(userId);
-      } else if (userInfo?.userType === UserTypeDto.Professor) {
-        return userService.getProfessorUser(userId);
-      } else if (userInfo?.userType === UserTypeDto.Student) {
-        return userService.getStudentUser(userId);
+      const userEmail = route.paramMap.get('email')!;
+      if (userEmail) {
+        return userService.getGenericUser(userEmail);
       } else {
         return EMPTY;
       }
@@ -73,20 +71,44 @@ export const usersResolver: ResolveFn<StudentUserDto[]> = (
   );
 };
 
-export const deliverableResolver: ResolveFn<DeliverableResponseDto> = (
+export const fetchAllUsersResolver: ResolveFn<GenericUserDto[]> = (
   route: ActivatedRouteSnapshot,
   state: RouterStateSnapshot
 ) => {
-  const deliverableService = inject(DeliverableService);
-  const deliverableId = +route.paramMap.get('id')!;
-  return deliverableService.getDeliverable(deliverableId).pipe(take(1));
-};
-
-export const reportResolver: ResolveFn<ReportDto> = (
-  route: ActivatedRouteSnapshot,
-  state: RouterStateSnapshot
-) => {
-  const deliverableService = inject(DeliverableService);
-  const taskId = +route.paramMap.get('id')!;
-  return deliverableService.getDeliverableReport(taskId).pipe(take(1));
+  const userService = inject(UserService);
+  return forkJoin({
+    students: userService.getStudentUsers(),
+    professors: userService.getProfessorUsers(),
+    admins: userService.getAdminUsers(),
+  }).pipe(
+    map(({ students, professors, admins }) => [
+      ...students.map(
+        (student) =>
+          ({
+            id: student?.id,
+            email: student.email,
+            fullName: student.fullName,
+            userType: UserTypeDto.Student,
+          } as GenericUserDto)
+      ),
+      ...professors.map(
+        (professor) =>
+          ({
+            id: professor.id,
+            email: professor.email,
+            fullName: professor.fullName,
+            userType: UserTypeDto.Professor,
+          } as GenericUserDto)
+      ),
+      ...admins.map(
+        (admin) =>
+          ({
+            id: admin.id,
+            email: admin.email,
+            fullName: admin.fullName,
+            userType: UserTypeDto.Administrator,
+          } as GenericUserDto)
+      ),
+    ])
+  );
 };

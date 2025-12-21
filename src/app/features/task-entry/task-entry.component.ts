@@ -176,6 +176,7 @@ export class TaskEntry {
         });
     }
   }
+  
   private csvToStringTestCases(task: TaskDto) {
     let csvString = '';
     task.solutionTestCases?.forEach((element) => {

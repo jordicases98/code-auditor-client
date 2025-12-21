@@ -165,7 +165,7 @@ export class LoginComponent {
   ngOnInit() {
     this.authService.createUser$.subscribe((userCreated: boolean) => {
       const signUpRaw = this.signUpForm.getRawValue();
-      if (userCreated) {
+      if (userCreated && signUpRaw.email && signUpRaw.fullName && signUpRaw.userType) {
         const userRequest = {
           email: signUpRaw.email,
           fullName: signUpRaw.fullName,

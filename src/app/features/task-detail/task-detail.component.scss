@@ -17,3 +17,15 @@
   left: 50%;
   margin-top: 0.5rem;
 }
+
+.status-deliverable-ok .mdc-text-field__input  {
+  color: green;
+  font-size: large;
+  font-weight: bold;
+}
+
+.status-deliverable-ko .mdc-text-field__input {
+  color: red;
+  font-size: larger;
+  font-weight: bold;
+}

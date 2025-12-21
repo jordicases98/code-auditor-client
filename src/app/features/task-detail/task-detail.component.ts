@@ -9,7 +9,7 @@ import {
   UserDto,
   UserTypeDto,
 } from '../../../../target/generated-sources';
-import { BehaviorSubject, finalize, map, take, throttleTime } from 'rxjs';
+import { BehaviorSubject, finalize, map, take, tap, throttleTime } from 'rxjs';
 import { DeliverableForm, DeliverableResponseForm } from './task.form';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -133,9 +133,15 @@ import { ToastService } from '../../shared/services/toast.service';
     <mat-card>
       <mat-card-content>
         <form [formGroup]="deliverableResponseForm">
-          <mat-form-field appearance="outline">
+          @if(deliverableResponseForm.controls.status.value === 'ACCEPTED') {
+          <mat-form-field appearance="outline" class="status-deliverable-ok">
             <input matInput placeholder="Status" formControlName="status" />
           </mat-form-field>
+          } @else if (deliverableResponseForm.controls.status.value === 'REJECTED') {
+          <mat-form-field appearance="outline" class="status-deliverable-ko">
+            <input matInput placeholder="Status" formControlName="status" />
+          </mat-form-field>
+          }
           <mat-form-field appearance="outline">
             <input matInput placeholder="Sonar Url" formControlName="sonarProjectUrl" />
             <mat-hint><a [href]="externalUrl" target="_blank"> Sonar Project URL </a> </mat-hint>
@@ -196,16 +202,17 @@ export class TaskDetail {
 
   externalUrl = '';
 
-  userId$ = this.authService.userInfo$.pipe(
-    map((u) => u?.id),
-    take(1)
+  userInfo$ = this.authService.userInfo$.pipe(
+    take(1),
+    tap((u) => (this.role = u?.userType ?? undefined))
   );
+  role?: UserTypeDto;
   userId: number | undefined;
 
   constructor(private route: ActivatedRoute) {
     this.taskData = this.route.snapshot.data['task'] as TaskDto;
     this.students = this.route.snapshot.data['studentUsers'] as StudentUserDto[];
-    this.userId$.subscribe((id) => (this.userId = id));
+    this.userInfo$.pipe(map((u) => u?.id)).subscribe((id) => (this.userId = id));
   }
 
   ngOnInit() {
@@ -224,7 +231,10 @@ export class TaskDetail {
       this.deliverableForm.disable();
       this.toastService.showToast('error', 'Due Date is overdue', true);
     }
-    if (this.userId && +this.userId === this.taskData.professorUser?.id) {
+    if (
+      (this.userId && +this.userId === this.taskData.professorUser?.id) ||
+      UserTypeDto.Administrator === this.role
+    ) {
       this.taskForm.controls.studentUserIds.enable();
     } else if (this.taskData.id && this.userId) {
       this.getDeliverableByTaskAndUserCall(+this.taskData.id, +this.userId);
@@ -247,7 +257,7 @@ export class TaskDetail {
           this.displayDeliverableResults(report);
         },
         error: () => {
-          this.toastService.showToast('error', 'Report could not be found', false);
+          this.toastService.showToast('warn', 'Report could not be found', false);
         },
       });
   }

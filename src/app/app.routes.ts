@@ -1,13 +1,18 @@
 import { Routes } from '@angular/router';
 import { LoginComponent } from './core/auth/pages/login/login.component';
 import { TaskComponent } from './features/task/task.component';
-import { ReportComponent } from './features/report/report.component';
 import { UserComponent } from './features/user/user.component';
-import { adminstratorRoleGuard, authGuard, professorRoleGuard, studentRoleGuard } from './core/auth/auth.guard';
-import { deliverableResolver, reportResolver, taskResolver, tasksResolver, userResolver, usersResolver } from './shared/services/resolvers.service';
+import { adminstratorRoleGuard, authGuard, professorRoleGuard } from './core/auth/auth.guard';
+import {
+  fetchAllUsersResolver,
+  taskResolver,
+  tasksResolver,
+  userResolver,
+  usersResolver,
+} from './shared/services/resolvers.service';
 import { TaskDetail } from './features/task-detail/task-detail.component';
-import { DeliverableDetail } from './features/deliverable-detail/deliverable-detail.component';
 import { TaskEntry } from './features/task-entry/task-entry.component';
+import { UserEntry } from './features/user-entry/user-entry';
 export const routes: Routes = [
   {
     path: 'login',
@@ -17,10 +22,18 @@ export const routes: Routes = [
     path: 'user',
     component: UserComponent,
     canActivate: [authGuard, adminstratorRoleGuard],
+    resolve: {
+      allUsers: fetchAllUsersResolver,
+    },
   },
   {
-    path: 'user/:id',
-    component: UserComponent,
+    path: 'user/new',
+    component: UserEntry,
+    canActivate: [authGuard, adminstratorRoleGuard],
+  },
+  {
+    path: 'user/:email',
+    component: UserEntry,
     canActivate: [authGuard, adminstratorRoleGuard],
     resolve: {
       user: userResolver,
@@ -33,7 +46,7 @@ export const routes: Routes = [
     resolve: {
       tasks: tasksResolver,
     },
-  },  
+  },
   {
     path: 'task/view/:id',
     component: TaskDetail,
@@ -54,26 +67,10 @@ export const routes: Routes = [
   {
     path: 'task/:id',
     component: TaskEntry,
-    canActivate: [authGuard, professorRoleGuard],
+    canActivate: [authGuard],
     resolve: {
       task: taskResolver,
       studentUsers: usersResolver,
-    },
-  },
-  {
-    path: 'report/view/:userId/:taskId',
-    component: ReportComponent,
-    canActivate: [authGuard],
-    resolve: {
-      report: reportResolver,
-    },
-  },
-  {
-    path: 'report/:id',
-    component: ReportComponent,
-    canActivate: [authGuard],
-    resolve: {
-      report: reportResolver,
     },
   },
   {

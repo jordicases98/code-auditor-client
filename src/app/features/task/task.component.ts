@@ -62,10 +62,6 @@ interface TaskView {
           <button mat-icon-button (click)="deleteTask(element.id)">
             <mat-icon>delete</mat-icon>
           </button>
-          } @if((isStudent$ | async) && element.hasDeliverable) {
-          <button mat-icon-button (click)="viewReport(element.id)">
-            <mat-icon>check_circle</mat-icon>
-          </button>
           }
         </td>
       </ng-container>
@@ -101,23 +97,16 @@ export class TaskComponent {
       title: task.title,
       description: task.description,
       dueDate: datePipe.transform(task.dueDate, 'dd-MM-yyyy'),
-      professor: task.professorUser?.fullName,
-      hasDeliverable: task.deliverables!.length > 0,
+      professor: task.professorUser?.fullName
     })) as TaskView[];
     this.dataSource = taskMapped;
   }
-
-  ngOnInit(): void {}
 
   createTask() {
     this.router.navigate(['/task/new']);
   }
 
   viewTask(taskId: number) {
-    this.router.navigate([`/task/view/${taskId}`]);
-  }
-
-  viewReport(taskId: number) {
     this.router.navigate([`/task/view/${taskId}`]);
   }
 

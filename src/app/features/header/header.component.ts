@@ -5,7 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { AuthService } from '../../core/auth/auth.service';
 import { MatMenuModule } from '@angular/material/menu';
-import { RouterLink } from "@angular/router";
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-header-component',
@@ -24,6 +24,10 @@ import { RouterLink } from "@angular/router";
         <p>{{ user?.fullName }}</p>
         <p>{{ user?.email }}</p>
         <p>{{ user?.userType }}</p>
+        <p routerLink="/task">{{ 'Browse Tasks' }}</p>
+        @if(user?.userType === 'administrator') {
+        <p routerLink="/user">{{ 'Browse Users' }}</p>
+        }
       </div>
     </mat-menu>
     }
