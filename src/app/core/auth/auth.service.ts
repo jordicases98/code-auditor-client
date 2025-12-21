@@ -1,11 +1,23 @@
 import { inject, Injectable } from '@angular/core';
-import { BehaviorSubject, EMPTY, filter, first, map, Observable, switchMap, take, tap } from 'rxjs';
+import {
+  BehaviorSubject,
+  distinctUntilChanged,
+  EMPTY,
+  filter,
+  first,
+  map,
+  Observable,
+  switchMap,
+  take,
+  tap,
+} from 'rxjs';
 import {
   AuthenticationService,
   GenericUserDto,
   TokenEmailRequestDto,
   TokenEmailResponseDto,
   UserDto,
+  UserRequestDto,
   UserService,
   UserTypeDto,
 } from '../../../../target/generated-sources';
@@ -25,7 +37,7 @@ export class AuthService {
 
   private userInformationSubject = new BehaviorSubject<GenericUserDto | null>(null);
 
-  private createUserSubject = new BehaviorSubject<boolean>(false);
+  private createUserSubject = new BehaviorSubject<UserRequestDto | null>(null);
   createUser$ = this.createUserSubject.asObservable();
 
   isUserLoggedIn = new BehaviorSubject<boolean>(false);
@@ -33,7 +45,7 @@ export class AuthService {
 
   userInfo$: Observable<GenericUserDto | null> = this.userInformationSubject.asObservable();
 
-  generateEmailUrl(email: string, createUser: boolean) {
+  generateEmailUrl(email: string, createUser: UserRequestDto | null) {
     const body = new HttpParams().set('username', email);
     this.httpClient
       .post('/auth/ott/generate', body, {
@@ -41,18 +53,23 @@ export class AuthService {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
       })
-      .pipe(take(1))
+      .pipe()
       .subscribe({
         next: () => {
-          if (createUser) {
-            this.createUserSubject.next(true);
-          }
+          this.createUserSubject.next(createUser);
+          this.toastService.showToast('success', 'Email Sent', false);
         },
         error: () => {
-          this.createUserSubject.next(false);
           this.toastService.showToast('error', 'Error Signing Up', false);
-        },
+        }
       });
+  }
+
+  createUser() {
+    return this.createUser$.pipe(
+      filter((userRequest) => userRequest !== null),
+      switchMap((userRequest: UserRequestDto) => this.userService.createUser(userRequest))
+    );
   }
 
   login(token: string) {

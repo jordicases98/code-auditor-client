@@ -22,6 +22,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { ToastService } from '../../../../shared/services/toast.service';
+import { take } from 'rxjs';
 
 @Component({
   selector: 'app-login-component',
@@ -156,46 +157,32 @@ export class LoginComponent {
   });
 
   private authService = inject(AuthService);
-  private userService = inject(UserService);
   private router = inject(Router);
   private toastService = inject(ToastService);
 
   toggleValue = 'SignUp';
 
   ngOnInit() {
-    this.authService.createUser$.subscribe((userCreated: boolean) => {
-      const signUpRaw = this.signUpForm.getRawValue();
-      if (userCreated && signUpRaw.email && signUpRaw.fullName && signUpRaw.userType) {
-        const userRequest = {
-          email: signUpRaw.email,
-          fullName: signUpRaw.fullName,
-          userType: signUpRaw.userType,
-        } as UserRequestDto;
-        this.userService
-          .createUser(userRequest)
-          .pipe()
-          .subscribe({
-            next: (user) => {
-              this.authService.setUserInformationSubject(user ?? null);
-              this.toastService.showToast(
-                'success',
-                'User created and email sent successfully',
-                false
-              );
-            },
-            error: () => {
-              this.toastService.showToast('error', 'Error Creating User', false);
-            },
-          });
-      }
+    this.authService.createUser().subscribe({
+      next: () => {
+        this.toastService.showToast('success', 'User created', false);
+      },
+      error: () => {
+        this.toastService.showToast('error', 'Error Creating User', false);
+      },
     });
   }
 
   signUp(createuser: boolean) {
     const signUpRaw = this.signUpForm.getRawValue();
+    const userRequest = {
+      email: signUpRaw.email,
+      fullName: signUpRaw.fullName,
+      userType: signUpRaw.userType,
+    } as UserRequestDto;
     this.authService.generateEmailUrl(
       createuser ? signUpRaw.email : this.regenerateForm.controls.email!.value,
-      createuser
+      createuser ? userRequest : null
     );
   }
 

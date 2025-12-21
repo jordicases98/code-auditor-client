@@ -2,13 +2,10 @@ import { Component, inject } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { ActivatedRoute, Router } from '@angular/router';
-import {
-  UserDto,
-  UserService,
-  UserTypeDto,
-} from '../../../../target/generated-sources';
+import { UserDto, UserService, UserTypeDto } from '../../../../target/generated-sources';
 import { ToastService } from '../../shared/services/toast.service';
-import { take } from 'rxjs';
+import { take, tap } from 'rxjs';
+import { AuthService } from '../../core/auth/auth.service';
 
 interface UserView {
   id?: number;
@@ -68,6 +65,14 @@ export class UserComponent {
   private router = inject(Router);
   private userService = inject(UserService);
   private toastService = inject(ToastService);
+  private authService = inject(AuthService);
+
+  userId = 0;
+
+  userInfo$ = this.authService.userInfo$.pipe(
+    take(1),
+    tap((u) => (this.userId = u!.id ?? 0))
+  );
 
   displayedColumns: string[] = ['id', 'email', 'fullName', 'userType', 'actions'];
   dataSource: UserView[] = [];
@@ -81,6 +86,7 @@ export class UserComponent {
       userType: user.userType,
     })) as UserView[];
     this.dataSource = userMapped;
+    this.userInfo$.subscribe();
   }
 
   createUser() {
@@ -88,12 +94,12 @@ export class UserComponent {
   }
 
   editUser(userId: number) {
-    const email = this.dataSource.find(u => u.id === userId)?.email
+    const email = this.dataSource.find((u) => u.id === userId)?.email;
     this.router.navigate([`/user/${email}`]);
   }
 
   deleteUser(userId: number, userType: string) {
-    if (userType === UserTypeDto.Administrator) {
+    if (userType === UserTypeDto.Administrator && userId !== +this.userId) {
       this.userService
         .deleteAdminUser(userId)
         .pipe(take(1))

@@ -1,25 +1,18 @@
 import { Component, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
-  GenericUserDto,
   UserDto,
   UserRequestDto,
   UserService,
   UserTypeDto,
 } from '../../../../target/generated-sources';
 import { ToastService } from '../../shared/services/toast.service';
-import {
-  FormControl,
-  FormGroup,
-  FormsModule,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UserEntryForm } from './user-entry.form';
-import { MatCard, MatCardTitle, MatCardContent, MatCardActions } from '@angular/material/card';
-import { MatFormField, MatHint, MatLabel } from '@angular/material/form-field';
+import { MatCardActions, MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatOption, MatSelectModule } from '@angular/material/select';
-import { distinctUntilChanged, finalize, switchMap, take, tap } from 'rxjs';
+import { take, tap } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
@@ -27,18 +20,15 @@ import { MatInputModule } from '@angular/material/input';
 @Component({
   selector: 'app-user-entry',
   imports: [
-    MatCard,
-    MatCardTitle,
-    MatCardContent,
-    MatFormField,
+    MatCardModule,
+    MatFormFieldModule,
     ReactiveFormsModule,
-    MatLabel,
+    MatInputModule,
     MatOption,
-    MatCardActions,
     RouterLink,
     MatSelectModule,
     MatButtonModule,
-    MatInputModule,
+    MatCardActions,
   ],
   template: `<mat-card class="mat-card-form">
     <mat-card-title>User Details</mat-card-title>
@@ -105,52 +95,40 @@ export class UserEntry {
       .pipe(
         take(1),
         tap((userInfo) => {
-          if (userInfo?.id === this.userData.id) this.userForm.disable();
+          if (userInfo?.id === this.userData?.id) this.userForm.disable();
         })
       )
       .subscribe();
   }
 
   ngOnInit() {
-    this.authService.createUser$.pipe(take(1), distinctUntilChanged())
-    .subscribe((userCreated: boolean) => {
-      if (userCreated) {
-        const userFormRaw = this.userForm.getRawValue();
-        const userRequest = {
-          fullName: userFormRaw.fullName,
-          email: userFormRaw.email,
-          userType: userFormRaw.userType,
-        } as UserRequestDto;
-        this.userService
-          .createUser(userRequest)
-          .pipe()
-          .subscribe({
-            next: (user) => {
-              this.toastService.showToast('success', 'User created', false);
-              this.router.navigate(['/user']);
-            },
-            error: () => {
-              this.toastService.showToast('error', 'Error Creating User', false);
-            },
-          });
-      }
+    this.authService.createUser().subscribe({
+      next: () => {
+        this.toastService.showToast('success', 'User created', false);
+      },
+      error: () => {
+        this.toastService.showToast('error', 'Error Creating User', false);
+      },
     });
   }
 
   submitUserForm() {
     const userFormRaw = this.userForm.getRawValue();
     const userRequest = {
-      id: userFormRaw.userId,
+      fullName: userFormRaw.fullName,
       email: userFormRaw.email,
       userType: userFormRaw.userType,
     } as UserRequestDto;
-
-    if (!userFormRaw.userId || userFormRaw.userId === 0) {
-      this.authService.generateEmailUrl(userRequest.email, true);
+    if (
+      userFormRaw.email !== '' &&
+      userFormRaw.fullName?.toString() !== '' &&
+      userFormRaw.userType?.toString() !== ''
+    ) {
+      this.authService.generateEmailUrl(userRequest.email, userRequest);
     } else {
       if (userRequest.userType === UserTypeDto.Administrator) {
         this.userService
-          .updateAdminUser(+userFormRaw.userId, userRequest)
+          .updateAdminUser(+userFormRaw?.userId, userRequest)
           .pipe(take(1))
           .subscribe({
             next: () => {
