@@ -5,12 +5,10 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { TaskDto, TaskService, UserTypeDto } from '../../../../target/generated-sources';
 import { AsyncPipe } from '@angular/common';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Toast } from 'primeng/toast';
-import { MessageService } from 'primeng/api';
 import { DatePipe } from '@angular/common';
 import { TruncatePipe } from '../../core/pipe/truncate.pipe';
 import { take } from 'rxjs';
+import { ToastService } from '../../shared/services/toast.service';
 const datePipe = new DatePipe('es-ES');
 
 interface TaskView {
@@ -19,7 +17,6 @@ interface TaskView {
   description?: string;
   dueDate?: string;
   professor?: string;
-  hasDeliverable?: boolean
 }
 
 @Component({
@@ -65,8 +62,7 @@ interface TaskView {
           <button mat-icon-button (click)="deleteTask(element.id)">
             <mat-icon>delete</mat-icon>
           </button>
-          }
-          @if((isStudent$ | async) && element.hasDeliverable) {
+          } @if((isStudent$ | async) && element.hasDeliverable) {
           <button mat-icon-button (click)="viewReport(element.id)">
             <mat-icon>check_circle</mat-icon>
           </button>
@@ -82,15 +78,15 @@ interface TaskView {
       <mat-icon>add</mat-icon>
     </button>
     }
-    <p-toast position="center"></p-toast>
   `,
   styleUrl: './task.component.scss',
-  imports: [MatTableModule, MatIconModule, AsyncPipe, Toast, TruncatePipe],
+  imports: [MatTableModule, MatIconModule, AsyncPipe, TruncatePipe],
 })
 export class TaskComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
   private taskService = inject(TaskService);
+  private toastService = inject(ToastService);
 
   protected isProfessor$ = this.authService.hasAnyRole([UserTypeDto.Professor]);
   protected isStudent$ = this.authService.hasAnyRole([UserTypeDto.Student]);
@@ -98,7 +94,7 @@ export class TaskComponent {
   displayedColumns: string[] = ['title', 'description', 'date', 'professor', 'actions'];
   dataSource: TaskView[] = [];
 
-  constructor(private route: ActivatedRoute, private messageService: MessageService) {
+  constructor(private route: ActivatedRoute) {
     const taskData = this.route.snapshot.data['tasks'] as TaskDto[];
     const taskMapped = taskData.map((task: TaskDto) => ({
       id: task.id,
@@ -106,7 +102,7 @@ export class TaskComponent {
       description: task.description,
       dueDate: datePipe.transform(task.dueDate, 'dd-MM-yyyy'),
       professor: task.professorUser?.fullName,
-      hasDeliverable: task.deliverables!.length > 0
+      hasDeliverable: task.deliverables!.length > 0,
     })) as TaskView[];
     this.dataSource = taskMapped;
   }
@@ -131,22 +127,15 @@ export class TaskComponent {
       .pipe(take(1))
       .subscribe({
         next: () => {
-          this.showToastSuccessTaskDeletion();
+          this.toastService.showToast('success', 'Task deleted successfully', false);
         },
         error: () => {
-          alert('Error Deleting User');
+          this.toastService.showToast('error', 'Error Deleting Task', false);
         },
       });
   }
 
   editTask(taskId: number) {
     this.router.navigate([`/task/${taskId}`]);
-  }
-
-  showToastSuccessTaskDeletion() {
-    this.messageService.add({
-      severity: 'success',
-      summary: 'Task deleted successfully',
-    });
   }
 }

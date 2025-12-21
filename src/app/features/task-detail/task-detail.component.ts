@@ -4,17 +4,14 @@ import { MatError, MatFormFieldModule } from '@angular/material/form-field';
 import {
   DeliverableResponseDto,
   DeliverableService,
-  ReportDto,
   StudentUserDto,
   TaskDto,
   UserDto,
   UserTypeDto,
 } from '../../../../target/generated-sources';
-import { BehaviorSubject, debounceTime, finalize, map, take, throttleTime } from 'rxjs';
+import { BehaviorSubject, finalize, map, take, throttleTime } from 'rxjs';
 import { DeliverableForm, DeliverableResponseForm } from './task.form';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MessageService } from 'primeng/api';
-import { Toast } from 'primeng/toast';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
@@ -25,7 +22,7 @@ import { MatIcon } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatOption, MatSelectModule } from '@angular/material/select';
 import { TaskEntryForm } from '../task-entry/task-entry.form';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ToastService } from '../../shared/services/toast.service';
 
 @Component({
   selector: 'app-task-detail-component',
@@ -33,7 +30,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     MatCardModule,
     MatFormFieldModule,
     ReactiveFormsModule,
-    Toast,
     MatInputModule,
     MatDatepickerModule,
     MatButtonModule,
@@ -46,7 +42,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     MatOption,
     MatSelectModule,
   ],
-  template: ` <mat-card>
+  template: ` <mat-card class="mat-card-form">
       <mat-card-title>Task Details</mat-card-title>
       <mat-card-content>
         <form [formGroup]="taskForm">
@@ -130,7 +126,9 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
       </mat-card-content>
     </mat-card>
     @if(showDeliverable$ | async) {
-    <button mat-raised-button color="primary" (click)="toggleReport()" class="toggle-report">Toggle Report</button>
+    <button mat-raised-button color="primary" (click)="toggleReport()" class="toggle-report">
+      Toggle Report
+    </button>
     @if(openReportCard) {
     <mat-card>
       <mat-card-content>
@@ -140,19 +138,19 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
           </mat-form-field>
           <mat-form-field appearance="outline">
             <input matInput placeholder="Sonar Url" formControlName="sonarProjectUrl" />
-            <a [href]="externalUrl" target="_blank"> Sonar Project URL </a>
+            <mat-hint><a [href]="externalUrl" target="_blank"> Sonar Project URL </a> </mat-hint>
           </mat-form-field>
         </form>
       </mat-card-content>
     </mat-card>
-    } }
-    <p-toast position="center"></p-toast>`,
+    } }`,
   styleUrl: './task-detail.component.scss',
   standalone: true,
 })
 export class TaskDetail {
   private deliverableService = inject(DeliverableService);
   private authService = inject(AuthService);
+  private toastService = inject(ToastService);
 
   protected taskForm = new FormGroup<TaskEntryForm>({
     title: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
@@ -203,7 +201,8 @@ export class TaskDetail {
     take(1)
   );
   userId: number | undefined;
-  constructor(private messageService: MessageService, private route: ActivatedRoute) {
+
+  constructor(private route: ActivatedRoute) {
     this.taskData = this.route.snapshot.data['task'] as TaskDto;
     this.students = this.route.snapshot.data['studentUsers'] as StudentUserDto[];
     this.userId$.subscribe((id) => (this.userId = id));
@@ -221,6 +220,10 @@ export class TaskDetail {
       studentUserIds: this.taskData.studentUsers!.flatMap((u) => (u.id ? [u.id] : [])),
     });
     this.taskForm.disable();
+    if (this.isAfterToday(this.taskForm.controls.dueDate.value)) {
+      this.deliverableForm.disable();
+      this.toastService.showToast('error', 'Due Date is overdue', true);
+    }
     if (this.userId && +this.userId === this.taskData.professorUser?.id) {
       this.taskForm.controls.studentUserIds.enable();
     } else if (this.taskData.id && this.userId) {
@@ -244,7 +247,7 @@ export class TaskDetail {
           this.displayDeliverableResults(report);
         },
         error: () => {
-          alert('Could not get report');
+          this.toastService.showToast('error', 'Report could not be found', false);
         },
       });
   }
@@ -261,24 +264,17 @@ export class TaskDetail {
         )
         .subscribe({
           next: (response) => {
+            this.toastService.showToast('success', 'Deliverable created', false);
             this.displayDeliverableResults(response);
           },
           error: (errorResponse) => {
+            this.toastService.showToast('error', 'Could not process deliverable', false);
             this.deliverableForm.controls.fileContentSolution.setErrors({
               backendError: errorResponse?.error?.detail,
             });
-            alert('Could not process deliverable');
           },
         });
     }
-  }
-
-  showToastSuccessUserCreation() {
-    this.messageService.add({
-      severity: 'success',
-      summary: 'Task created',
-      sticky: true,
-    });
   }
 
   onFileSelected(event: any) {
@@ -317,5 +313,10 @@ export class TaskDetail {
 
   toggleReport() {
     this.openReportCard = !this.openReportCard;
+  }
+
+  isAfterToday(dateStr: string): boolean {
+    const todayStr = new Date().toISOString().slice(0, 10);
+    return todayStr > dateStr;
   }
 }

@@ -5,7 +5,6 @@ import { MatInputModule } from '@angular/material/input';
 import { DeliverableDto, DeliverableService } from '../../../../target/generated-sources';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
-import { MessageService } from 'primeng/api';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { ReportForm } from './report.form';
 
@@ -61,7 +60,7 @@ export class DeliverableDetail {
     rejectedTests: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
   });
 
-  constructor(private messageService: MessageService, private route: ActivatedRoute) {
+  constructor(private route: ActivatedRoute) {
     this.reportForm.disable();
   }
 

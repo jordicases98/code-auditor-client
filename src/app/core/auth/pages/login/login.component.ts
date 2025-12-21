@@ -21,14 +21,11 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MessageService } from 'primeng/api';
-import { Toast } from 'primeng/toast';
-import { take } from 'rxjs';
+import { ToastService } from '../../../../shared/services/toast.service';
 
 @Component({
   selector: 'app-login-component',
   standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <a routerLink="'/login'">
       <img src="assets/code-review.png" class="code-auditor-logo" />
@@ -61,10 +58,15 @@ import { take } from 'rxjs';
               <mat-select formControlName="userType">
                 <mat-option value="student">Student</mat-option>
                 <mat-option value="professor">Professor</mat-option>
-                <mat-option value="adminstrator">Administrator</mat-option>
+                <mat-option value="administrator">Administrator</mat-option>
               </mat-select>
             </mat-form-field>
-            <button mat-raised-button color="primary" (click)="signUp(true)" [disabled]="!signUpForm.valid">
+            <button
+              mat-raised-button
+              color="primary"
+              (click)="signUp(true)"
+              [disabled]="!signUpForm.valid"
+            >
               Sign Up
             </button>
           </form>
@@ -80,7 +82,12 @@ import { take } from 'rxjs';
               <input matInput placeholder="Token" formControlName="token" />
             </mat-form-field>
 
-            <button mat-raised-button color="primary" (click)="login()" [disabled]="!loginForm.valid">
+            <button
+              mat-raised-button
+              color="primary"
+              (click)="login()"
+              [disabled]="!loginForm.valid"
+            >
               Login
             </button>
           </form>
@@ -96,14 +103,18 @@ import { take } from 'rxjs';
               <input matInput placeholder="Email" formControlName="email" />
             </mat-form-field>
 
-            <button mat-raised-button color="primary" (click)="signUp(false)" [disabled]="!regenerateForm.valid">
+            <button
+              mat-raised-button
+              color="primary"
+              (click)="signUp(false)"
+              [disabled]="!regenerateForm.valid"
+            >
               Regenerate
             </button>
           </form>
         </mat-card-content>
       </mat-card>
     </div>
-    <p-toast position="center"></p-toast>
   `,
   styleUrl: './login.component.scss',
   imports: [
@@ -115,9 +126,7 @@ import { take } from 'rxjs';
     MatSelectModule,
     MatButtonModule,
     MatButtonToggleModule,
-    Toast,
   ],
-  providers: [],
 })
 export class LoginComponent {
   protected signUpForm = new FormGroup<SignUpForm>({
@@ -149,10 +158,9 @@ export class LoginComponent {
   private authService = inject(AuthService);
   private userService = inject(UserService);
   private router = inject(Router);
+  private toastService = inject(ToastService);
 
   toggleValue = 'SignUp';
-
-  constructor(private messageService: MessageService) {}
 
   ngOnInit() {
     this.authService.createUser$.subscribe((userCreated: boolean) => {
@@ -169,10 +177,14 @@ export class LoginComponent {
           .subscribe({
             next: (user) => {
               this.authService.setUserInformationSubject(user ?? null);
-              this.showToastSuccessUserCreation();
+              this.toastService.showToast(
+                'success',
+                'User created and email sent successfully',
+                false
+              );
             },
             error: () => {
-              alert('Error Creating User');
+              this.toastService.showToast('error', 'Error Creating User', false);
             },
           });
       }
@@ -181,7 +193,10 @@ export class LoginComponent {
 
   signUp(createuser: boolean) {
     const signUpRaw = this.signUpForm.getRawValue();
-    this.authService.generateEmailUrl(createuser ? signUpRaw.email : this.regenerateForm.controls.email!.value, createuser);
+    this.authService.generateEmailUrl(
+      createuser ? signUpRaw.email : this.regenerateForm.controls.email!.value,
+      createuser
+    );
   }
 
   login() {
@@ -195,12 +210,5 @@ export class LoginComponent {
 
   onToggleChange(value: string) {
     this.toggleValue = value;
-  }
-
-  showToastSuccessUserCreation() {
-    this.messageService.add({
-      severity: 'success',
-      summary: 'User created and email sent successfully',
-    });
   }
 }

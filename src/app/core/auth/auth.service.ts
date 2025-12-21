@@ -1,15 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import {
-  BehaviorSubject,
-  EMPTY,
-  filter,
-  first,
-  map,
-  Observable,
-  switchMap,
-  take,
-  tap,
-} from 'rxjs';
+import { BehaviorSubject, EMPTY, filter, first, map, Observable, switchMap, take, tap } from 'rxjs';
 import {
   AuthenticationService,
   GenericUserDto,
@@ -21,6 +11,7 @@ import {
 } from '../../../../target/generated-sources';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { ToastService } from '../../shared/services/toast.service';
 
 @Injectable({
   providedIn: 'root',
@@ -30,6 +21,7 @@ export class AuthService {
   private router = inject(Router);
   private userService = inject(UserService);
   private authenticationService = inject(AuthenticationService);
+  private toastService = inject(ToastService);
 
   private userInformationSubject = new BehaviorSubject<GenericUserDto | null>(null);
 
@@ -58,7 +50,7 @@ export class AuthService {
         },
         error: () => {
           this.createUserSubject.next(false);
-          alert('Error Signing Up');
+          this.toastService.showToast('error', 'Error Signing Up', false);
         },
       });
   }
@@ -89,7 +81,7 @@ export class AuthService {
           this.router.navigate(['/task']);
         },
         error: () => {
-          alert('Error Login In');
+          this.toastService.showToast('error', 'Error Login In', false);
         },
       });
   }
@@ -111,7 +103,7 @@ export class AuthService {
           this.router.navigate(['/login']);
         },
         error: () => {
-          alert('Error Login Out');
+          this.toastService.showToast('error', 'Error Login Out', false);
         },
       });
   }

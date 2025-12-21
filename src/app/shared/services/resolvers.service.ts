@@ -16,7 +16,7 @@ import {
 } from '../../../../target/generated-sources';
 import { AuthService } from '../../core/auth/auth.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { EMPTY, switchMap, take } from 'rxjs';
+import { EMPTY, iif, of, switchMap, take } from 'rxjs';
 
 export const userResolver: ResolveFn<
   StudentUserDto | AdministratorUserDto | ProfessorUserDto | null
@@ -45,10 +45,8 @@ export const tasksResolver: ResolveFn<TaskDto[]> = (
   state: RouterStateSnapshot
 ) => {
   const taskService = inject(TaskService);
-  return taskService.getTasks().pipe(
-    take(1)
-  );
-}
+  return taskService.getTasks().pipe(take(1));
+};
 
 export const taskResolver: ResolveFn<TaskDto> = (
   route: ActivatedRouteSnapshot,
@@ -56,9 +54,7 @@ export const taskResolver: ResolveFn<TaskDto> = (
 ) => {
   const taskService = inject(TaskService);
   const taskId = +route.paramMap.get('id')!;
-  return taskService.getTask(taskId).pipe(
-    take(1)
-  );
+  return taskService.getTask(taskId).pipe(take(1));
 };
 
 export const usersResolver: ResolveFn<StudentUserDto[]> = (
@@ -66,8 +62,14 @@ export const usersResolver: ResolveFn<StudentUserDto[]> = (
   state: RouterStateSnapshot
 ) => {
   const userService = inject(UserService);
-  return userService.getStudentUsers().pipe(
-    take(1)
+  const authService = inject(AuthService);
+  return authService.hasAnyRole([UserTypeDto.Professor, UserTypeDto.Administrator]).pipe(
+    take(1),
+    switchMap((hasRole) => {
+      if (hasRole) {
+        return userService.getStudentUsers().pipe(take(1));
+      } else return of([]);
+    })
   );
 };
 
@@ -77,9 +79,7 @@ export const deliverableResolver: ResolveFn<DeliverableResponseDto> = (
 ) => {
   const deliverableService = inject(DeliverableService);
   const deliverableId = +route.paramMap.get('id')!;
-  return deliverableService.getDeliverable(deliverableId).pipe(
-    take(1)
-  );
+  return deliverableService.getDeliverable(deliverableId).pipe(take(1));
 };
 
 export const reportResolver: ResolveFn<ReportDto> = (
@@ -88,7 +88,5 @@ export const reportResolver: ResolveFn<ReportDto> = (
 ) => {
   const deliverableService = inject(DeliverableService);
   const taskId = +route.paramMap.get('id')!;
-  return deliverableService.getDeliverableReport(taskId).pipe(
-    take(1)
-  );
+  return deliverableService.getDeliverableReport(taskId).pipe(take(1));
 };

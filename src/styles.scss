@@ -38,7 +38,8 @@ body {
 }
 
 mat-card {
-  width: 550px;
+  width: 30vw;
+  min-width: 550px;
   padding: 1rem;
   display: flex;
   flex-direction: column;
@@ -46,7 +47,7 @@ mat-card {
 
 mat-form-field {
   margin-top: 0.5rem;
-  width: 100%; 
+  width: 100%;
 }
 
 mat-card-title {
@@ -73,5 +74,9 @@ mat-button-toggle {
 }
 
 .actions-buttons {
-    margin-top: 1rem;
+  margin-top: 1rem;
+}
+
+.mat-card-form {
+  margin-top: 64px;
 }

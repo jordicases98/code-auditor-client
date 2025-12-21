@@ -14,8 +14,6 @@ import {
 import { take, tap } from 'rxjs';
 import { TaskEntryForm } from './task-entry.form';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MessageService } from 'primeng/api';
-import { Toast } from 'primeng/toast';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
@@ -23,6 +21,7 @@ import { AuthService } from '../../core/auth/auth.service';
 import { MatOption, MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { csvStringValidator } from '../../core/csv-string.validator';
+import { ToastService } from '../../shared/services/toast.service';
 
 @Component({
   selector: 'app-task-entry-component',
@@ -30,66 +29,66 @@ import { csvStringValidator } from '../../core/csv-string.validator';
     MatCardModule,
     MatFormFieldModule,
     ReactiveFormsModule,
-    Toast,
     MatInputModule,
     MatDatepickerModule,
     MatOption,
     RouterLink,
     MatSelectModule,
     MatButtonModule,
-    MatCardActions
+    MatCardActions,
   ],
-  template: ` <mat-card>
-      <mat-card-title>Task Entry</mat-card-title>
-      <mat-card-content>
-        <form [formGroup]="taskForm">
-          <!-- <mat-form-field>
-            <input matInput placeholder="Task Id" formControlName="taskId" />
-          </mat-form-field> -->
-          <mat-form-field appearance="outline">
-            <input matInput placeholder="Title" formControlName="title" />
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <textarea matInput placeholder="Description" formControlName="description"></textarea>
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Choose a date</mat-label>
-            <input matInput [matDatepicker]="picker" formControlName="dueDate" [min]="minDate" />
-            <mat-hint>MM/DD/YYYY</mat-hint>
-            <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
-            <mat-datepicker #picker></mat-datepicker>
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Student Assigned</mat-label>
-            <mat-select formControlName="studentUserIds" required multiple>
-              @for (student of students; track student) {
-              <mat-option [value]="student.id">{{ student.fullName }}</mat-option>
-              }
-            </mat-select>
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-hint>TestInput1,TestOutput1,TestInput2,TestOutput2</mat-hint>
-            <textarea
-              matInput
-              placeholder="Solution Test Cases"
-              formControlName="solutionTestCases"
-            ></textarea>
-            @if(taskForm.controls.solutionTestCases.hasError('csvEmptyValue') ||
-            taskForm.controls.solutionTestCases.hasError('csvMalformatted') ) {
-            <mat-error> CSV is malformatted. Must follow csv input output pairs </mat-error>
+  template: ` <mat-card class="mat-card-form">
+    <mat-card-title>Task Entry</mat-card-title>
+    <mat-card-content>
+      <form [formGroup]="taskForm">
+        <mat-form-field appearance="outline">
+          <input matInput placeholder="Title" formControlName="title" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <textarea matInput placeholder="Description" formControlName="description"></textarea>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Choose a date</mat-label>
+          <input matInput [matDatepicker]="picker" formControlName="dueDate" [min]="minDate" />
+          <mat-hint>MM/DD/YYYY</mat-hint>
+          <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-datepicker #picker></mat-datepicker>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Student Assigned</mat-label>
+          <mat-select formControlName="studentUserIds" required multiple>
+            @for (student of students; track student) {
+            <mat-option [value]="student.id">{{ student.fullName }}</mat-option>
             }
-          </mat-form-field>
-        </form>
-        <mat-card-actions class="actions-buttons">
-          <button mat-raised-button color="primary" [routerLink]="['/task']">Go back</button>
-           <span class="spacer"></span>
-          <button mat-raised-button color="primary" (click)="submitTaskForm()" [disabled]="!taskForm.valid">
-            Submit
-          </button>
-        </mat-card-actions>
-      </mat-card-content>
-    </mat-card>
-    <p-toast position="center"></p-toast>`,
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-hint>TestInput1,TestOutput1,TestInput2,TestOutput2</mat-hint>
+          <textarea
+            matInput
+            placeholder="Solution Test Cases"
+            formControlName="solutionTestCases"
+          ></textarea>
+          @if(taskForm.controls.solutionTestCases.hasError('csvEmptyValue') ||
+          taskForm.controls.solutionTestCases.hasError('csvMalformatted') ) {
+          <mat-error> CSV is malformatted. Must follow csv input output pairs </mat-error>
+          }
+        </mat-form-field>
+      </form>
+      <mat-card-actions class="actions-buttons">
+        <button mat-raised-button color="primary" [routerLink]="['/task']">Go back</button>
+        <span class="spacer"></span>
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="submitTaskForm()"
+          [disabled]="!taskForm.valid"
+        >
+          Submit
+        </button>
+      </mat-card-actions>
+    </mat-card-content>
+  </mat-card>`,
   styleUrl: './task-entry.component.scss',
   standalone: true,
 })
@@ -97,7 +96,7 @@ export class TaskEntry {
   private taskService = inject(TaskService);
   private router = inject(Router);
   private authService = inject(AuthService);
-  private userService = inject(UserService);
+  private toastService = inject(ToastService);
 
   protected taskForm = new FormGroup<TaskEntryForm>({
     taskId: new FormControl(0, { nonNullable: true, validators: [Validators.required] }),
@@ -119,7 +118,7 @@ export class TaskEntry {
 
   isProfessor$ = this.authService.hasAnyRole([UserTypeDto.Professor]);
 
-  constructor(private messageService: MessageService, private route: ActivatedRoute) {
+  constructor(private route: ActivatedRoute) {
     this.students = this.route.snapshot.data['studentUsers'] as StudentUserDto[];
 
     const task: TaskDto = this.route.snapshot.data['task'];
@@ -154,12 +153,12 @@ export class TaskEntry {
         .createTask(taskDto)
         .pipe(take(1))
         .subscribe({
-          next: (response) => {
-            this.showToastSuccessTaskCreation();
+          next: () => {
+            this.toastService.showToast('success', 'Task created', false);
             this.router.navigate(['/task']);
           },
           error: () => {
-            alert('Could not create task');
+            this.toastService.showToast('error', 'Could not create task', false);
           },
         });
     } else {
@@ -167,12 +166,12 @@ export class TaskEntry {
         .updateTask(+taskFormRaw.taskId, taskDto)
         .pipe(take(1))
         .subscribe({
-          next: (response) => {
-            this.showToastSuccessTaskCreation();
+          next: () => {
+            this.toastService.showToast('success', 'Task updated', false);
             this.router.navigate(['/task']);
           },
           error: () => {
-            alert('Could not update task');
+            this.toastService.showToast('error', 'Could not update task', false);
           },
         });
     }
@@ -201,13 +200,5 @@ export class TaskEntry {
       });
     }
     return formattedTestCases;
-  }
-
-  showToastSuccessTaskCreation() {
-    this.messageService.add({
-      severity: 'success',
-      summary: 'Task created',
-      sticky: true,
-    });
   }
 }

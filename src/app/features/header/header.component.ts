@@ -5,7 +5,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { AuthService } from '../../core/auth/auth.service';
 import { MatMenuModule } from '@angular/material/menu';
-import { MatCardTitle } from "@angular/material/card";
 import { RouterLink } from "@angular/router";
 
 @Component({
