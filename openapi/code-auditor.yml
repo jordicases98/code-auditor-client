@@ -1,0 +1,662 @@
+openapi: "3.0.4"
+info:
+  title: Code Auditor
+  description: Code Auditor API
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080/
+
+paths:
+  /auth/token/email:
+    post:
+      tags:
+        - Authentication
+      summary: Get email from token
+      description: Retrieve email from token.
+      operationId: getEmailFromToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenEmailRequest'
+      responses:
+        '200':
+          description: User information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenEmailResponse'
+  /api/adminUsers:
+    get:
+      tags:
+        - User
+      summary: Get users
+      description: Retrieve users information.
+      operationId: getAdminUsers
+      responses:
+        '200':
+          description: Users information
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AdministratorUser'
+  /api/user:
+    post:
+      tags:
+        - User
+      summary: Create user
+      description: This can only be done by the logged in user.
+      operationId: createUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+      responses:
+        '200':
+          description: Created user successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericUser'
+  /api/generic-user:
+    post:
+      tags:
+        - User
+      summary: Get generic user
+      description: Retrieve generic users information.
+      operationId: getGenericUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: string
+      responses:
+        '200':
+          description: User information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericUser'
+  /api/adminUser/{userId}:
+    parameters:
+      - $ref: '#/components/parameters/UserId'
+    get:
+      tags:
+        - User
+      summary: Get user
+      description: Retrieve user information.
+      operationId: getAdminUser
+      responses:
+        '200':
+          description: Retrieve user information.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdministratorUser'
+    put:
+      tags:
+        - User
+      summary: Update user
+      description: Update user information.
+      operationId: updateAdminUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+      responses:
+        '200':
+          description: Update user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdministratorUser'
+    delete:
+      tags:
+        - User
+      summary: Delete user
+      description: Delete user information.
+      operationId: deleteAdminUser
+      responses:
+        '200':
+          description: User deleted
+
+  /api/studentUsers:
+    get:
+      tags:
+        - User
+      summary: Get users
+      description: Retrieve users information.
+      operationId: getStudentUsers
+      responses:
+        '200':
+          description: Users information
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StudentUser'
+  /api/studentUser/{userId}:
+    parameters:
+      - $ref: '#/components/parameters/UserId'
+    get:
+      tags:
+        - User
+      summary: Get user
+      description: Retrieve user information.
+      operationId: getStudentUser
+      responses:
+        '200':
+          description: Retrieve user information.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentUser'
+    put:
+      tags:
+        - User
+      summary: Update user
+      description: Update user information.
+      operationId: updateStudentUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+      responses:
+        '200':
+          description: Update user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentUser'
+    delete:
+      tags:
+        - User
+      summary: Delete user
+      description: Delete user information.
+      operationId: deleteStudentUser
+      responses:
+        '200':
+          description: User deleted
+
+  /api/professorUsers:
+    get:
+      tags:
+        - User
+      summary: Get users
+      description: Retrieve users information.
+      operationId: getProfessorUsers
+      responses:
+        '200':
+          description: Users information
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProfessorUser'
+  /api/professorUser/{userId}:
+    parameters:
+      - $ref: '#/components/parameters/UserId'
+    get:
+      tags:
+        - User
+      summary: Get user
+      description: Retrieve user information.
+      operationId: getProfessorUser
+      responses:
+        '200':
+          description: Retrieve user information.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfessorUser'
+    put:
+      tags:
+        - User
+      summary: Update user
+      description: Update user information.
+      operationId: updateProfessorUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+      responses:
+        '200':
+          description: Update user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfessorUser'
+    delete:
+      tags:
+        - User
+      summary: Delete user
+      description: Delete user information.
+      operationId: deleteProfessorUser
+      responses:
+        '200':
+          description: User deleted
+
+  /api/deliverable:
+    post:
+      tags:
+        - Deliverable
+      summary: Commit deliverable
+      description: Commit deliverable to be analysed.
+      operationId: commitDeliverable
+      x-allow-io-exception: true
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DeliverableRequest'
+      responses:
+        '200':
+          description: Commited deliverable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeliverableResponse'
+  /api/deliverable/{deliverableId}:
+    parameters:
+      - $ref: '#/components/parameters/DeliverableId'
+    get:
+      tags:
+        - Deliverable
+      summary: Get deliverable
+      description: Get deliverable to be analysed.
+      operationId: getDeliverable
+      responses:
+        '200':
+          description: Deliverable information.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeliverableResponse'
+  /api/deliverable/{taskId}/{userId}:
+    parameters:
+      - $ref: '#/components/parameters/TaskId'
+      - $ref: '#/components/parameters/UserId'
+    get:
+      tags:
+        - Deliverable
+      summary: Get deliverable from task id and user id
+      description: Get deliverable to be analysed.
+      operationId: getDeliverableByTaskAndUser
+      responses:
+        '200':
+          description: Deliverable information.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeliverableResponse'
+  /api/deliverable/{deliverableId}/report:
+    parameters:
+      - $ref: '#/components/parameters/DeliverableId'
+    get:
+      tags:
+        - Deliverable
+      summary: Get deliverable report by task id (student) or deliverable id
+      description: Get deliverable report.
+      operationId: getDeliverableReport
+      responses:
+        '200':
+          description: Successfully retrieved deliverable information.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Report'
+  /api/task:
+    post:
+      tags:
+        - Task
+      summary: Create task
+      description: Create task
+      operationId: createTask
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskRequest'
+        required: true
+      responses:
+        '200':
+          description: Inserted task.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+  /api/tasks:
+    get:
+      tags:
+        - Task
+      summary: Get tasks
+      description: Get task
+      operationId: getTasks
+      responses:
+        '200':
+          description: Get tasks for a logged user.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+  /api/task/{taskId}:
+    parameters:
+      - $ref: '#/components/parameters/TaskId'
+    get:
+      tags:
+        - Task
+      summary: Get task
+      description: Get task.
+      operationId: getTask
+      responses:
+        '200':
+          description: Task information retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+    put:
+      tags:
+        - Task
+      summary: Update task
+      description: Update task.
+      operationId: updateTask
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskRequest'
+        required: true
+      responses:
+        '200':
+          description: Updated task information.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+    delete:
+      tags:
+        - Task
+      summary: Delete task
+      description: Delete task.
+      operationId: deleteTask
+      responses:
+        '200':
+          description: Task deleted
+  /api/user/{userId}/task/{taskId}:
+    parameters:
+      - $ref: '#/components/parameters/UserId'
+      - $ref: '#/components/parameters/TaskId'
+    post:
+      tags:
+        - UserTask
+      summary: Create user task
+      description: Create user task
+      operationId: grantUserTask
+      responses:
+        '200':
+          description: User and task information granted.
+    delete:
+      tags:
+        - UserTask
+      summary: Revoke user task
+      description: Revoke user task
+      operationId: revokeUserTask
+      responses:
+        '200':
+          description: User task revoked
+
+
+
+components:
+  schemas:
+    UserType:
+      type: string
+      nullable: false
+      enum:
+        - student
+        - professor
+        - administrator
+    GenericUser:
+      type: object
+      required:
+        - userType
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        fullName:
+          type: string
+        userType:
+          $ref: "#/components/schemas/UserType"
+    AdministratorUser:
+      allOf:
+        - $ref: "#/components/schemas/GenericUser"
+        - type: object
+          required:
+            - userType
+    StudentUser:
+      allOf:
+        - $ref: "#/components/schemas/GenericUser"
+        - type: object
+          required:
+            - userType
+          properties:
+            deliverables:
+              type: array
+              items:
+                $ref: "#/components/schemas/Deliverable"
+            assignedTasks:
+              type: array
+              items:
+                $ref: "#/components/schemas/Task"
+    UserRequest:
+      type: object
+      required:
+        - email
+        - userType
+      properties:
+        email:
+          type: string
+        fullName:
+          type: string
+        userType:
+          $ref: "#/components/schemas/UserType"
+    ProfessorUser:
+      allOf:
+        - $ref: "#/components/schemas/GenericUser"
+        - type: object
+          required:
+            - userType
+          properties:
+            tasks:
+              type: array
+              items:
+                $ref: "#/components/schemas/Task"
+    Task:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        dueDate:
+          type: string
+          format: date
+        deliverables:
+          type: array
+          items:
+            $ref: "#/components/schemas/Deliverable"
+        professorUser:
+          $ref: "#/components/schemas/ProfessorUser"
+        studentUsers:
+          type: array
+          items:
+            $ref: "#/components/schemas/StudentUser"
+        solutionTestCases:
+          type: array
+          items:
+            $ref: "#/components/schemas/TestCase"
+    TaskRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        dueDate:
+          type: string
+          format: date
+        studentUserIds:
+          type: array
+          items:
+            type: integer
+        solutionTestCases:
+          type: array
+          items:
+            $ref: "#/components/schemas/TestCase"
+    Deliverable:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        fileContentSolution:
+          type: string
+          format: binary
+        deliveryDate:
+          type: string
+          format: date-time
+        task:
+          $ref: "#/components/schemas/Task"
+        report:
+          $ref: "#/components/schemas/Report"
+    DeliverableRequest:
+      type: object
+      properties:
+        fileContentSolution:
+          type: string
+          format: binary
+        taskId:
+          type: integer
+      required:
+        - fileContentSolution
+        - taskId
+    DeliverableResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        sonarProjectUrl:
+          type: string
+    Report:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        state:
+          type: string
+        reportDate:
+          type: string
+          format: date-time
+        sonarUrl:
+          type: string
+        acceptedTestCases:
+          type: array
+          items:
+            $ref: "#/components/schemas/TestCase"
+        rejectedTestCases:
+          type: array
+          items:
+            $ref: "#/components/schemas/TestCase"
+    AnalysisMessage:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        severity:
+          type: string
+        description:
+          type: string
+        rowNumber:
+          type: integer
+        reports:
+          type: array
+          items:
+            $ref: "#/components/schemas/Report"
+    User:
+      allOf:
+        - $ref: "#/components/schemas/GenericUser"
+      discriminator:
+        propertyName: userType
+        mapping:
+          professor: "#/components/schemas/ProfessorUser"
+          administrator: "#/components/schemas/AdministratorUser"
+          student: "#/components/schemas/StudentUser"
+    TestCase:
+      type: object
+      properties:
+        testCaseInput:
+          type: string
+        testCaseOutput:
+          type: string
+    TokenEmailRequest:
+      type: object
+      required:
+        - token
+      properties:
+        token:
+          type: string
+    TokenEmailResponse:
+      type: object
+      properties:
+        email:
+          type: string
+  parameters:
+    UserId:
+      name: userId
+      in: path
+      description: User Id
+      required: true
+      schema:
+        type: integer
+    TaskId:
+      name: taskId
+      in: path
+      description: Task Id
+      required: true
+      schema:
+        type: integer
+    DeliverableId:
+      name: deliverableId
+      in: path
+      description: Deliverable Id
+      required: true
+      schema:
+        type: integer
