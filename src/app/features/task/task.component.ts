@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, DestroyRef, inject } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -9,6 +9,7 @@ import { DatePipe } from '@angular/common';
 import { TruncatePipe } from '../../core/pipe/truncate.pipe';
 import { take } from 'rxjs';
 import { ToastService } from '../../shared/services/toast.service';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 const datePipe = new DatePipe('es-ES');
 
 interface TaskView {
@@ -83,6 +84,7 @@ export class TaskComponent {
   private router = inject(Router);
   private taskService = inject(TaskService);
   private toastService = inject(ToastService);
+  readonly #destroyRef = inject(DestroyRef);
 
   protected isProfessor$ = this.authService.hasAnyRole([UserTypeDto.Professor]);
   protected isStudent$ = this.authService.hasAnyRole([UserTypeDto.Student]);
@@ -97,7 +99,7 @@ export class TaskComponent {
       title: task.title,
       description: task.description,
       dueDate: datePipe.transform(task.dueDate, 'dd-MM-yyyy'),
-      professor: task.professorUser?.fullName
+      professor: task.professorUser?.fullName,
     })) as TaskView[];
     this.dataSource = taskMapped;
   }
@@ -113,7 +115,7 @@ export class TaskComponent {
   deleteTask(taskId: number) {
     this.taskService
       .deleteTask(taskId)
-      .pipe(take(1))
+      .pipe(takeUntilDestroyed(this.#destroyRef))
       .subscribe({
         next: () => {
           this.toastService.showToast('success', 'Task deleted successfully', false);

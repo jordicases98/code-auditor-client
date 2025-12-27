@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, DestroyRef, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   UserDto,
@@ -12,10 +12,11 @@ import { UserEntryForm } from './user-entry.form';
 import { MatCardActions, MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatOption, MatSelectModule } from '@angular/material/select';
-import { take, tap } from 'rxjs';
+import { take, takeUntil, tap } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-user-entry',
@@ -71,10 +72,11 @@ export class UserEntry {
   private userService = inject(UserService);
   private toastService = inject(ToastService);
   private authService = inject(AuthService);
+  readonly #destroyRef = inject(DestroyRef);
 
   protected userForm = new FormGroup<UserEntryForm>({
     userId: new FormControl(0, { nonNullable: true, validators: [Validators.required] }),
-    email: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    email: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.email] }),
     fullName: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     userType: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
   });
@@ -101,17 +103,6 @@ export class UserEntry {
       .subscribe();
   }
 
-  ngOnInit() {
-    this.authService.createUser().subscribe({
-      next: () => {
-        this.toastService.showToast('success', 'User created', false);
-      },
-      error: () => {
-        this.toastService.showToast('error', 'Error Creating User', false);
-      },
-    });
-  }
-
   submitUserForm() {
     const userFormRaw = this.userForm.getRawValue();
     const userRequest = {
@@ -129,7 +120,7 @@ export class UserEntry {
       if (userRequest.userType === UserTypeDto.Administrator) {
         this.userService
           .updateAdminUser(+userFormRaw?.userId, userRequest)
-          .pipe(take(1))
+          .pipe(takeUntilDestroyed(this.#destroyRef))
           .subscribe({
             next: () => {
               this.toastService.showToast('success', 'Admin User updated', false);
@@ -142,7 +133,7 @@ export class UserEntry {
       } else if (userRequest.userType === UserTypeDto.Professor) {
         this.userService
           .updateProfessorUser(+userFormRaw.userId, userRequest)
-          .pipe(take(1))
+          .pipe(takeUntilDestroyed(this.#destroyRef))
           .subscribe({
             next: () => {
               this.toastService.showToast('success', 'Professor User updated', false);
@@ -155,7 +146,7 @@ export class UserEntry {
       } else if (userRequest.userType === UserTypeDto.Student) {
         this.userService
           .updateStudentUser(+userFormRaw.userId, userRequest)
-          .pipe(take(1))
+          .pipe(takeUntilDestroyed(this.#destroyRef))
           .subscribe({
             next: () => {
               this.toastService.showToast('success', 'Student User updated', false);

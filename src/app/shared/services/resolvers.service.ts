@@ -1,17 +1,10 @@
 import { inject } from '@angular/core';
 import type { ActivatedRouteSnapshot, ResolveFn, RouterStateSnapshot } from '@angular/router';
 import {
-  AdministratorUserDto,
-  DeliverableDto,
-  DeliverableResponseDto,
-  DeliverableService,
   GenericUserDto,
-  ProfessorUserDto,
-  ReportDto,
   StudentUserDto,
   TaskDto,
   TaskService,
-  UserDto,
   UserService,
   UserTypeDto,
 } from '../../../../target/generated-sources';

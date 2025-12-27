@@ -163,7 +163,7 @@ export class LoginComponent {
   toggleValue = 'SignUp';
 
   ngOnInit() {
-    this.authService.createUser().subscribe({
+    this.authService.createUser().pipe().subscribe({
       next: () => {
         this.toastService.showToast('success', 'User created', false);
       },

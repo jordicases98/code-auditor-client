@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, DestroyRef, inject } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -6,6 +6,7 @@ import { UserDto, UserService, UserTypeDto } from '../../../../target/generated-
 import { ToastService } from '../../shared/services/toast.service';
 import { take, tap } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 interface UserView {
   id?: number;
@@ -66,6 +67,7 @@ export class UserComponent {
   private userService = inject(UserService);
   private toastService = inject(ToastService);
   private authService = inject(AuthService);
+  readonly #destroyRef = inject(DestroyRef);
 
   userId = 0;
 
@@ -99,10 +101,10 @@ export class UserComponent {
   }
 
   deleteUser(userId: number, userType: string) {
-    if (userType === UserTypeDto.Administrator && userId !== +this.userId) {
+    if (userId !== +this.userId) {
       this.userService
         .deleteAdminUser(userId)
-        .pipe(take(1))
+        .pipe(takeUntilDestroyed(this.#destroyRef))
         .subscribe({
           next: () => {
             this.toastService.showToast('success', 'User deleted successfully', false);
@@ -114,7 +116,7 @@ export class UserComponent {
     } else if (userType === UserTypeDto.Professor) {
       this.userService
         .deleteProfessorUser(userId)
-        .pipe(take(1))
+        .pipe()
         .subscribe({
           next: () => {
             this.toastService.showToast('success', 'User deleted successfully', false);
@@ -126,7 +128,7 @@ export class UserComponent {
     } else if (userType === UserTypeDto.Student) {
       this.userService
         .deleteStudentUser(userId)
-        .pipe(take(1))
+        .pipe(takeUntilDestroyed(this.#destroyRef))
         .subscribe({
           next: () => {
             this.toastService.showToast('success', 'User deleted successfully', false);

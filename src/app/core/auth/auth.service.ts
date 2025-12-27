@@ -1,15 +1,11 @@
-import { inject, Injectable } from '@angular/core';
+import { DestroyRef, inject, Injectable } from '@angular/core';
 import {
   BehaviorSubject,
-  distinctUntilChanged,
-  EMPTY,
   filter,
   first,
   map,
   Observable,
   switchMap,
-  take,
-  tap,
 } from 'rxjs';
 import {
   AuthenticationService,
@@ -24,6 +20,7 @@ import {
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { ToastService } from '../../shared/services/toast.service';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Injectable({
   providedIn: 'root',
@@ -34,6 +31,7 @@ export class AuthService {
   private userService = inject(UserService);
   private authenticationService = inject(AuthenticationService);
   private toastService = inject(ToastService);
+  readonly #destroyRef = inject(DestroyRef);
 
   private userInformationSubject = new BehaviorSubject<GenericUserDto | null>(null);
 
@@ -53,7 +51,7 @@ export class AuthService {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
       })
-      .pipe()
+      .pipe(takeUntilDestroyed(this.#destroyRef))
       .subscribe({
         next: () => {
           this.createUserSubject.next(createUser);
@@ -61,14 +59,15 @@ export class AuthService {
         },
         error: () => {
           this.toastService.showToast('error', 'Error Signing Up', false);
-        }
+        },
       });
   }
 
   createUser() {
     return this.createUser$.pipe(
-      filter((userRequest) => userRequest !== null),
-      switchMap((userRequest: UserRequestDto) => this.userService.createUser(userRequest))
+      filter((userRequest): userRequest is UserRequestDto => userRequest !== null),
+      switchMap((userRequest) => this.userService.createUser(userRequest)),
+      takeUntilDestroyed(this.#destroyRef)
     );
   }
 
@@ -81,6 +80,7 @@ export class AuthService {
         },
       })
       .pipe(
+        takeUntilDestroyed(this.#destroyRef),
         switchMap(() => {
           const request: TokenEmailRequestDto = {
             token: token,

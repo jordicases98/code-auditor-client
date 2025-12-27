@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, DestroyRef, inject } from '@angular/core';
 import { MatCardActions, MatCardModule } from '@angular/material/card';
 import { MatError, MatFormFieldModule } from '@angular/material/form-field';
 import {
@@ -23,6 +23,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatOption, MatSelectModule } from '@angular/material/select';
 import { TaskEntryForm } from '../task-entry/task-entry.form';
 import { ToastService } from '../../shared/services/toast.service';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-task-detail-component',
@@ -157,6 +158,7 @@ export class TaskDetail {
   private deliverableService = inject(DeliverableService);
   private authService = inject(AuthService);
   private toastService = inject(ToastService);
+  readonly #destroyRef = inject(DestroyRef);
 
   protected taskForm = new FormGroup<TaskEntryForm>({
     title: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
@@ -212,7 +214,12 @@ export class TaskDetail {
   constructor(private route: ActivatedRoute) {
     this.taskData = this.route.snapshot.data['task'] as TaskDto;
     this.students = this.route.snapshot.data['studentUsers'] as StudentUserDto[];
-    this.userInfo$.pipe(map((u) => u?.id)).subscribe((id) => (this.userId = id));
+    this.userInfo$
+      .pipe(
+        map((u) => u?.id),
+        takeUntilDestroyed(this.#destroyRef)
+      )
+      .subscribe((id) => (this.userId = id));
   }
 
   ngOnInit() {
@@ -240,7 +247,7 @@ export class TaskDetail {
       this.getDeliverableByTaskAndUserCall(+this.taskData.id, +this.userId);
     }
     this.taskForm.controls.studentUserIds.valueChanges
-      .pipe(throttleTime(300))
+      .pipe(throttleTime(300), takeUntilDestroyed(this.#destroyRef))
       .subscribe((studentId: any) => {
         if (studentId && this.taskData.id) {
           this.getDeliverableByTaskAndUserCall(+this.taskData.id, studentId);
@@ -251,7 +258,7 @@ export class TaskDetail {
   private getDeliverableByTaskAndUserCall(taskId: number, userId: number) {
     this.deliverableService
       .getDeliverableByTaskAndUser(taskId, userId)
-      .pipe(take(1))
+      .pipe(takeUntilDestroyed(this.#destroyRef))
       .subscribe({
         next: (report: DeliverableResponseDto) => {
           this.displayDeliverableResults(report);
@@ -269,7 +276,7 @@ export class TaskDetail {
       this.deliverableService
         .commitDeliverable(deliverableFormRaw.fileContentSolution as Blob, this.taskData.id ?? 0)
         .pipe(
-          take(1),
+          takeUntilDestroyed(this.#destroyRef),
           finalize(() => (this.showLoadingSpinner = false))
         )
         .subscribe({

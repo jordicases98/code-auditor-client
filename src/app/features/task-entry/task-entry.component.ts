@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, DestroyRef, inject } from '@angular/core';
 import { MatCardActions, MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import {
@@ -22,6 +22,7 @@ import { MatOption, MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { csvStringValidator } from '../../core/csv-string.validator';
 import { ToastService } from '../../shared/services/toast.service';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-task-entry-component',
@@ -97,6 +98,7 @@ export class TaskEntry {
   private router = inject(Router);
   private authService = inject(AuthService);
   private toastService = inject(ToastService);
+  readonly #destroyRef = inject(DestroyRef);
 
   protected taskForm = new FormGroup<TaskEntryForm>({
     taskId: new FormControl(0, { nonNullable: true, validators: [Validators.required] }),
@@ -151,7 +153,8 @@ export class TaskEntry {
     if (!taskFormRaw.taskId) {
       this.taskService
         .createTask(taskDto)
-        .pipe(take(1))
+        .pipe(
+          takeUntilDestroyed(this.#destroyRef))
         .subscribe({
           next: () => {
             this.toastService.showToast('success', 'Task created', false);
@@ -164,7 +167,8 @@ export class TaskEntry {
     } else {
       this.taskService
         .updateTask(+taskFormRaw.taskId, taskDto)
-        .pipe(take(1))
+        .pipe(
+          takeUntilDestroyed(this.#destroyRef))
         .subscribe({
           next: () => {
             this.toastService.showToast('success', 'Task updated', false);
