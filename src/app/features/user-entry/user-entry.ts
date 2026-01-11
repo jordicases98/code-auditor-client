@@ -92,6 +92,8 @@ export class UserEntry {
         fullName: this.userData.fullName ?? '',
         userType: this.userData.userType ?? '',
       });
+      this.userForm.controls.email.disable();
+      this.userForm.controls.userType.disable();
     }
     this.authService.userInfo$
       .pipe(
